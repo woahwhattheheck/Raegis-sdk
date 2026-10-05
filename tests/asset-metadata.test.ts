@@ -61,6 +61,21 @@ describe('RWA asset metadata schema', () => {
     }
   });
 
+  it('rejects a shape-valid issuer with an invalid StrKey checksum', () => {
+    const badChecksumIssuer = `${VALID_RWA_ISSUER.slice(0, -1)}A`;
+
+    expect(badChecksumIssuer).toMatch(/^G[A-Z2-7]{55}$/);
+    expect(
+      rwaAssetMetadataSchema.safeParse({
+        ...validRwaAssetMetadataInput,
+        issuer: badChecksumIssuer,
+      })
+    ).toMatchObject({
+      success: false,
+      error: { code: 'INVALID_ISSUER', field: 'issuer' },
+    });
+  });
+
   it('rejects malformed symbols and unknown lifecycle states', () => {
     expect(
       rwaAssetMetadataSchema.safeParse({

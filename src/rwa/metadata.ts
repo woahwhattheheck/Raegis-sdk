@@ -1,3 +1,4 @@
+import { Keypair } from '@stellar/stellar-sdk';
 import {
   AssetMetadataErrorCode,
   AssetMetadataField,
@@ -30,10 +31,22 @@ function objectInput(input: unknown): Record<string, unknown> {
 }
 
 function issuer(value: unknown): string {
-  if (typeof value !== 'string' || !STELLAR_ACCOUNT_PATTERN.test(value.trim())) {
+  if (typeof value !== 'string') {
     return fail('issuer', 'INVALID_ISSUER', 'issuer has an invalid account format');
   }
-  return value.trim();
+
+  const normalized = value.trim();
+  if (!STELLAR_ACCOUNT_PATTERN.test(normalized)) {
+    return fail('issuer', 'INVALID_ISSUER', 'issuer has an invalid account format');
+  }
+
+  try {
+    Keypair.fromPublicKey(normalized);
+  } catch {
+    return fail('issuer', 'INVALID_ISSUER', 'issuer has an invalid Stellar StrKey checksum');
+  }
+
+  return normalized;
 }
 
 function symbol(value: unknown): string {

@@ -18,10 +18,9 @@ interface RwaAssetMetadata {
 
 The schema applies these rules:
 
-- **issuer** — canonical Stellar account-address shape (`G` plus 55 StrKey
-  base32 characters). This is a structural check; callers that receive
-  untrusted addresses should additionally perform full StrKey checksum
-  validation at their transport or signing boundary.
+- **issuer** — canonical Stellar Ed25519 public-key StrKey (`G` plus 55
+  base32 characters) with a valid Stellar checksum. Shape-valid addresses with
+  a bad StrKey checksum are rejected as `INVALID_ISSUER`.
 - **symbol** — normalized to uppercase and follows the existing dashboard
   ticker convention: 2-10 letters/digits, optionally followed by one
   hyphenated 2-10 character segment (for example `UST-6M`).
