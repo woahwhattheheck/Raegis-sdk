@@ -25,9 +25,9 @@ function transferEvent(overrides: Partial<AegisContractEvent> = {}): AegisContra
   } as AegisContractEvent;
 }
 
-// @ts-expect-error whitelist operations require an address target.
 const invalidAdminActivityInput: AegisActivityInput = {
   operation: 'whitelist-add',
+  // @ts-expect-error whitelist operations require an address target.
   target: { assetId: 'not-an-address' },
   status: 'pending',
   transactionHash: null,
