@@ -1,0 +1,1062 @@
+{
+  "source_commit": "e31436ca161bef7089356f8d888c7227653b7d84",
+  "source_tree": "5f89d04ac77aed62aa992127144cae14676eacce",
+  "upstream_base": "69fff2c7e8c6fe801428fc1bb71d064c5c94949c",
+  "upstream_base_tree": "4f8bb78da0096e969c57f148ddef05c195a00671",
+  "source_files": [
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "mode": "100644",
+      "sha": "4025c534120d2dd34469bd7c456ed0377f0aee50"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "mode": "100644",
+      "sha": "948d79daaea5249e4c90bdf282574960c536e45c"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/workflows/auto-trigger.yml",
+      "mode": "100644",
+      "sha": "76ae7fca64614b6373dde95eca9814c1f565af0f"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/workflows/trigger-auto-assign.yml",
+      "mode": "100644",
+      "sha": "0799e9d75f99f35c50afd9b60778cd84ba6bd28d"
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "mode": "100644",
+      "sha": "ad5b973a67027a0b1def789da7b4c04e61b11115"
+    },
+    {
+      "path": ".github/workflows/runtime-compatibility.yml",
+      "mode": "100644",
+      "sha": "819ae2a0fe7e4ba053442cd188f9b83e63a93824"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "sha": "76fb2e557e649f65c27fdfc1345a07eef5996f27"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "mode": "100644",
+      "sha": "62afcbbb978ab258dac65f831a118d05e1466ceb"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "sha": "17c897a65092f39c01ae31682ddcbd702dfe4a57"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "sha": "5e77bd3c0f8d6db4574a73b68f71f51ad8a2cd6e"
+    },
+    {
+      "path": "docs/acceptance-criteria-audit-template.md",
+      "mode": "100644",
+      "sha": "dc54dee83bf1f490da6bc7200d961af5d12f3df7"
+    },
+    {
+      "path": "docs/acceptance-criteria-audit.md",
+      "mode": "100644",
+      "sha": "0d6c593f7f648ce59f7a0fd5d8e828fc74cc11fb"
+    },
+    {
+      "path": "docs/acceptance-criteria-traceability.md",
+      "mode": "100644",
+      "sha": "cdc34486c129d09b1d22ef8e0176babcba1fbcc8"
+    },
+    {
+      "path": "docs/admin-action-receipts.md",
+      "mode": "100644",
+      "sha": "cf18ddeea176bc4dfb2e1abd828491a8e5a65bce"
+    },
+    {
+      "path": "docs/api-reference.md",
+      "mode": "100644",
+      "sha": "e0475344c992ce27b2c71f1df99c6ef022b15bdd"
+    },
+    {
+      "path": "docs/ci-pass-requirement.md",
+      "mode": "100644",
+      "sha": "65bf5ba1be07ba0b78875b181995e09fc024a524"
+    },
+    {
+      "path": "docs/ci-pass-requirements.md",
+      "mode": "100644",
+      "sha": "ee1d2d2317271dfa7ad8f13a49594f5a4e042cae"
+    },
+    {
+      "path": "docs/ci-resolution-workflow.md",
+      "mode": "100644",
+      "sha": "76156aed63ebf593a04c9cdc8b25c7d607124539"
+    },
+    {
+      "path": "docs/ci-response-guide.md",
+      "mode": "100644",
+      "sha": "63c6c9358e7e4d30015450ce9189ca8c30aeb1f3"
+    },
+    {
+      "path": "docs/contract-events.md",
+      "mode": "100644",
+      "sha": "550ed432de2b8593bc969044caf7dc2536ab6e64"
+    },
+    {
+      "path": "docs/contributor-evaluation-policy.md",
+      "mode": "100644",
+      "sha": "7aa3dab351fdaf7a29d1ae4ef841fc8660ea93fb"
+    },
+    {
+      "path": "docs/contributor-payment-guide.md",
+      "mode": "100644",
+      "sha": "bd1d2564ab5239f77902aff11a8a48fa2446ab3b"
+    },
+    {
+      "path": "docs/contributor-test-matrix.md",
+      "mode": "100644",
+      "sha": "eef9c487b3b377eec4465bdf49b0fb14a7e39b9e"
+    },
+    {
+      "path": "docs/environments.md",
+      "mode": "100644",
+      "sha": "dc50f349019012bb2bf926908afce0869419dea8"
+    },
+    {
+      "path": "docs/investor-portfolio.md",
+      "mode": "100644",
+      "sha": "308740f7308497f3205a77b25569bf12945f65e8"
+    },
+    {
+      "path": "docs/issue-approval-readiness.md",
+      "mode": "100644",
+      "sha": "f992d34d2bde112931c009b957f291aae9782cbc"
+    },
+    {
+      "path": "docs/low-effort-pr-examples.md",
+      "mode": "100644",
+      "sha": "a5f4a6c91f4cdbdb1a9251423a1459b07602eaf0"
+    },
+    {
+      "path": "docs/meaningful-change-threshold.md",
+      "mode": "100644",
+      "sha": "2de74a5567bde3c3e8f9d69aabe668eb66ae7ad3"
+    },
+    {
+      "path": "docs/meaningful-implementation-checklist.md",
+      "mode": "100644",
+      "sha": "a638bbaada6dc82a0c9a8ad85150cdc961fcee7a"
+    },
+    {
+      "path": "docs/migration-guide.md",
+      "mode": "100644",
+      "sha": "512c9bf77b8b997f28cad117bbfca950263ab226"
+    },
+    {
+      "path": "docs/network-failures.md",
+      "mode": "100644",
+      "sha": "22ba6fa5898c30c4d3e1698efcd12a2ea1a4f460"
+    },
+    {
+      "path": "docs/payment-period-communication-policy.md",
+      "mode": "100644",
+      "sha": "8d6efc6f66ede62d96ca8478f4d7d09e25f35530"
+    },
+    {
+      "path": "docs/payment-period-conduct.md",
+      "mode": "100644",
+      "sha": "6ef63a0f538894c7b661d1a44e4dd55ebddf558c"
+    },
+    {
+      "path": "docs/pr-evidence-checklist.md",
+      "mode": "100644",
+      "sha": "96e6410a868d4c7bebf5e1a87d64a3cc6bfbc1ab"
+    },
+    {
+      "path": "docs/public-api-compatibility.md",
+      "mode": "100644",
+      "sha": "ea59bd3865e2a5155e9a910f8654fb720c5c646c"
+    },
+    {
+      "path": "docs/release-checklist.md",
+      "mode": "100644",
+      "sha": "9b2e1352ef2385ab07791219e0cd3f663ca5aae8"
+    },
+    {
+      "path": "docs/reviewer-checklist.md",
+      "mode": "100644",
+      "sha": "1350bd901d42c574c32fcaba4e8935119df2ede8"
+    },
+    {
+      "path": "docs/role-aware-client-factory.md",
+      "mode": "100644",
+      "sha": "41afd00b7def758853628b0f2083edcac3ad9766"
+    },
+    {
+      "path": "docs/role-discovery.md",
+      "mode": "100644",
+      "sha": "ce52da34b09eb8dc0387a8e9cef046b6b54dc112"
+    },
+    {
+      "path": "docs/runtime-compatibility.md",
+      "mode": "100644",
+      "sha": "c5eeeffea71d92753e049cee965e492aecef2f48"
+    },
+    {
+      "path": "docs/self-review-template.md",
+      "mode": "100644",
+      "sha": "46c74a06842e6be89fa41cb0ba0f076d73307f3d"
+    },
+    {
+      "path": "docs/test-first-contribution-guide.md",
+      "mode": "100644",
+      "sha": "fcd8d03a3d12c03e3c8985b6ce104000203e8f23"
+    },
+    {
+      "path": "docs/test-first-contribution.md",
+      "mode": "100644",
+      "sha": "9986fb0b85d6efb403454494eb82302152df6a37"
+    },
+    {
+      "path": "docs/testing-evidence-requirement.md",
+      "mode": "100644",
+      "sha": "1cd49ed6925af71a8023b7886d905a89ccc3846a"
+    },
+    {
+      "path": "docs/testing.md",
+      "mode": "100644",
+      "sha": "c92da79c888067dd37d3e86677e346b352672e1e"
+    },
+    {
+      "path": "docs/verification.md",
+      "mode": "100644",
+      "sha": "c8fcafeb41cc1efd4ab52ac5b719f3a4fe5ff4b1"
+    },
+    {
+      "path": "examples/migration/compliance-before-after.ts",
+      "mode": "100644",
+      "sha": "97ab94f4f63106b6b1dbcfed71d897f396f265a3"
+    },
+    {
+      "path": "examples/migration/error-handling-before-after.ts",
+      "mode": "100644",
+      "sha": "22c4f19e1e5a529995cbe62b736b178b94deb575"
+    },
+    {
+      "path": "examples/migration/mint-transfer-before-after.ts",
+      "mode": "100644",
+      "sha": "9a9f1fa1534346443cd72b269ee7bed513a308f2"
+    },
+    {
+      "path": "examples/migration/portfolio-before-after.ts",
+      "mode": "100644",
+      "sha": "f4e057cc20dcd84309fc95f002f3c2f96bf316ce"
+    },
+    {
+      "path": "jest.config.js",
+      "mode": "100644",
+      "sha": "b08a66336dd5a02f888cf01d980c0934ea6acd39"
+    },
+    {
+      "path": "package-lock.json",
+      "mode": "100644",
+      "sha": "d49d5ede780f1cea5d6835154e59f3e241952798"
+    },
+    {
+      "path": "package.json",
+      "mode": "100644",
+      "sha": "03b1908c19af0e259596dbd86684e6d79deb434e"
+    },
+    {
+      "path": "scripts/check-compat.mjs",
+      "mode": "100644",
+      "sha": "22ef39c9b2947bd854f2d21d583f18c34aaaac57"
+    },
+    {
+      "path": "src/admin/receipts.ts",
+      "mode": "100644",
+      "sha": "d3e21ebeb3c3fc73a304f3687f7e72e8d6e7a982"
+    },
+    {
+      "path": "src/asset.ts",
+      "mode": "100644",
+      "sha": "0b5922dc115fbdc30ccb66b411e4b6a6b07b9187"
+    },
+    {
+      "path": "src/client-factory.ts",
+      "mode": "100644",
+      "sha": "fd891c7d39e4a2a879360bdc90f28e434c0fc6a0"
+    },
+    {
+      "path": "src/client.ts",
+      "mode": "100644",
+      "sha": "bf959efc3e790a4f1139f1d3f5ef62cacaaea42e"
+    },
+    {
+      "path": "src/compliance.ts",
+      "mode": "100644",
+      "sha": "04e0be7d0b562ca2172fb07d6f9fa1890952e6be"
+    },
+    {
+      "path": "src/config/environments.ts",
+      "mode": "100644",
+      "sha": "38d913f0d95f8cb3f03d46a9b499e84823109f79"
+    },
+    {
+      "path": "src/config/validate.ts",
+      "mode": "100644",
+      "sha": "7b179c3507ea03154073c27022f7d0c19e9c47a8"
+    },
+    {
+      "path": "src/diagnostics/network.ts",
+      "mode": "100644",
+      "sha": "a2955a554cb6fee7d2b7f6b5d3fdc730130edc7a"
+    },
+    {
+      "path": "src/errors/client-factory.ts",
+      "mode": "100644",
+      "sha": "44e53cd20a74157513bde518e46d16ff9ae7baa0"
+    },
+    {
+      "path": "src/errors/config.ts",
+      "mode": "100644",
+      "sha": "fedf47606ba794f322c8b076f30269096e52bef9"
+    },
+    {
+      "path": "src/errors/event.ts",
+      "mode": "100644",
+      "sha": "ef9948cb987b49e35d867b328468d5dbd8bf6ccc"
+    },
+    {
+      "path": "src/errors/network.ts",
+      "mode": "100644",
+      "sha": "afe58f1b9531b08aa9962fbd0cdd7bf30aee397e"
+    },
+    {
+      "path": "src/errors/portfolio.ts",
+      "mode": "100644",
+      "sha": "f467f0417770d48b90ee607aa8d9829fac4813ee"
+    },
+    {
+      "path": "src/errors/role.ts",
+      "mode": "100644",
+      "sha": "b84eddf8c9d0081821aeb3fa1846fded07569eef"
+    },
+    {
+      "path": "src/events/decoder.ts",
+      "mode": "100644",
+      "sha": "780bb9dc59d9876acd3f0640a7ec7216d370c675"
+    },
+    {
+      "path": "src/events/module.ts",
+      "mode": "100644",
+      "sha": "503f317dcfb3f281686c7e7a4ab35adaeaf71b79"
+    },
+    {
+      "path": "src/events/topics.ts",
+      "mode": "100644",
+      "sha": "f51fe89a31b90d6eeba5c6b87ef1c92a35c340bb"
+    },
+    {
+      "path": "src/index.ts",
+      "mode": "100644",
+      "sha": "b498dcfb2008865b3a98ad0ceaa330ff7a89a547"
+    },
+    {
+      "path": "src/investor/portfolio.ts",
+      "mode": "100644",
+      "sha": "7574b785a303ff4cb39a40bde82df3e9f413a7c1"
+    },
+    {
+      "path": "src/network/failures.ts",
+      "mode": "100644",
+      "sha": "872a5409d2f0c87657a6998a1303c659a0ca7380"
+    },
+    {
+      "path": "src/role.ts",
+      "mode": "100644",
+      "sha": "0239d03b21535147697fa73bd54763597c23bb8a"
+    },
+    {
+      "path": "src/soroban/scval.ts",
+      "mode": "100644",
+      "sha": "2d7faa9c31dbbf5960aa93c59f7d6127091e44eb"
+    },
+    {
+      "path": "src/testing/fixtures.ts",
+      "mode": "100644",
+      "sha": "08ca6680fc1eda2ff9663cb8d8637e0cee0b75ab"
+    },
+    {
+      "path": "src/testing/index.ts",
+      "mode": "100644",
+      "sha": "1c8fc612a4088d4f9b87ac432849e9b030c5158d"
+    },
+    {
+      "path": "src/testing/mock-client.ts",
+      "mode": "100644",
+      "sha": "0eed26507070cbf74a13889c80421e02645e6122"
+    },
+    {
+      "path": "src/types/admin-receipt.ts",
+      "mode": "100644",
+      "sha": "c908b129bbed9b72c6959b6abdc3dbf7e4d0ec07"
+    },
+    {
+      "path": "src/types/client-factory.ts",
+      "mode": "100644",
+      "sha": "57ec5a972c1b1b017e3b9ef394215053d25f4729"
+    },
+    {
+      "path": "src/types/contract-event.ts",
+      "mode": "100644",
+      "sha": "d79d92e87ddb04e4ea9012e28603137723b1b51e"
+    },
+    {
+      "path": "src/types/portfolio.ts",
+      "mode": "100644",
+      "sha": "e777cc3c0ef7deae4440933b909fb400f9e3cfb7"
+    },
+    {
+      "path": "src/types/role.ts",
+      "mode": "100644",
+      "sha": "35eb96eaa0c0d5503095949323192212c751184d"
+    },
+    {
+      "path": "src/utils/xdr-parser.ts",
+      "mode": "100644",
+      "sha": "bf4ef22fc8495362501e254cbdfddc1b13277bae"
+    },
+    {
+      "path": "tests/admin-receipts.test.ts",
+      "mode": "100644",
+      "sha": "2f7ac172524a2276daa52e2e589583a15350b445"
+    },
+    {
+      "path": "tests/client-factory.test.ts",
+      "mode": "100644",
+      "sha": "300324695f3d06c11e3c0f83cb338c9892586638"
+    },
+    {
+      "path": "tests/client.test.ts",
+      "mode": "100644",
+      "sha": "4c7e139445bca19a9a29c920f3231d5ca4b75906"
+    },
+    {
+      "path": "tests/compat/browser-smoke.ts",
+      "mode": "100644",
+      "sha": "220331d00fdcf34ed184bf91718509e7aed39e0e"
+    },
+    {
+      "path": "tests/compat/node-smoke.ts",
+      "mode": "100644",
+      "sha": "4899edb4ca22a42d0458d1220879a317f8052ae4"
+    },
+    {
+      "path": "tests/config.test.ts",
+      "mode": "100644",
+      "sha": "a4257cbc68e53ed1830377c2d8e22bd796c6222a"
+    },
+    {
+      "path": "tests/events-decoder.test.ts",
+      "mode": "100644",
+      "sha": "fbdbfce6564d65ce7e77bb8b2572132a278c530b"
+    },
+    {
+      "path": "tests/events-module.test.ts",
+      "mode": "100644",
+      "sha": "0d6ae71e3255f575169a23e1602de264ea80360d"
+    },
+    {
+      "path": "tests/fixtures/contract-events.ts",
+      "mode": "100644",
+      "sha": "0f28ab42e2b712189f72f5eafe5e5b2ee04c64cb"
+    },
+    {
+      "path": "tests/investor.test.ts",
+      "mode": "100644",
+      "sha": "a8f5276e888644e41709a563079086c2f42eda4c"
+    },
+    {
+      "path": "tests/mock-client-examples.test.ts",
+      "mode": "100644",
+      "sha": "119e3c7eeda292f72d336b0ef922cddc15cdf74c"
+    },
+    {
+      "path": "tests/mock-client.test.ts",
+      "mode": "100644",
+      "sha": "6a3f2220432548acc9b64733127cd47a9205d664"
+    },
+    {
+      "path": "tests/network-failures.test.ts",
+      "mode": "100644",
+      "sha": "f04545519cc06c43f9c52caf6f6d75e95c1c0929"
+    },
+    {
+      "path": "tests/role.test.ts",
+      "mode": "100644",
+      "sha": "cfe06e18ceb2b834df45d1a5516d751bb43dc4fa"
+    },
+    {
+      "path": "tsconfig.json",
+      "mode": "100644",
+      "sha": "ff457865dbd0be16ed9cba655afdce607805044c"
+    }
+  ],
+  "base_files": [
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "mode": "100644",
+      "sha": "4025c534120d2dd34469bd7c456ed0377f0aee50"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "mode": "100644",
+      "sha": "948d79daaea5249e4c90bdf282574960c536e45c"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/workflows/auto-trigger.yml",
+      "mode": "100644",
+      "sha": "76ae7fca64614b6373dde95eca9814c1f565af0f"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/workflows/trigger-auto-assign.yml",
+      "mode": "100644",
+      "sha": "0799e9d75f99f35c50afd9b60778cd84ba6bd28d"
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "mode": "100644",
+      "sha": "ad5b973a67027a0b1def789da7b4c04e61b11115"
+    },
+    {
+      "path": ".github/workflows/runtime-compatibility.yml",
+      "mode": "100644",
+      "sha": "819ae2a0fe7e4ba053442cd188f9b83e63a93824"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "sha": "76fb2e557e649f65c27fdfc1345a07eef5996f27"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "mode": "100644",
+      "sha": "62afcbbb978ab258dac65f831a118d05e1466ceb"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "sha": "17c897a65092f39c01ae31682ddcbd702dfe4a57"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "sha": "4d2bb5a126aebd7e55f5e8316d6a98becffccf7d"
+    },
+    {
+      "path": "docs/acceptance-criteria-audit-template.md",
+      "mode": "100644",
+      "sha": "dc54dee83bf1f490da6bc7200d961af5d12f3df7"
+    },
+    {
+      "path": "docs/acceptance-criteria-audit.md",
+      "mode": "100644",
+      "sha": "0d6c593f7f648ce59f7a0fd5d8e828fc74cc11fb"
+    },
+    {
+      "path": "docs/acceptance-criteria-traceability.md",
+      "mode": "100644",
+      "sha": "cdc34486c129d09b1d22ef8e0176babcba1fbcc8"
+    },
+    {
+      "path": "docs/admin-action-receipts.md",
+      "mode": "100644",
+      "sha": "cf18ddeea176bc4dfb2e1abd828491a8e5a65bce"
+    },
+    {
+      "path": "docs/api-reference.md",
+      "mode": "100644",
+      "sha": "e0475344c992ce27b2c71f1df99c6ef022b15bdd"
+    },
+    {
+      "path": "docs/ci-pass-requirement.md",
+      "mode": "100644",
+      "sha": "65bf5ba1be07ba0b78875b181995e09fc024a524"
+    },
+    {
+      "path": "docs/ci-pass-requirements.md",
+      "mode": "100644",
+      "sha": "ee1d2d2317271dfa7ad8f13a49594f5a4e042cae"
+    },
+    {
+      "path": "docs/ci-resolution-workflow.md",
+      "mode": "100644",
+      "sha": "76156aed63ebf593a04c9cdc8b25c7d607124539"
+    },
+    {
+      "path": "docs/ci-response-guide.md",
+      "mode": "100644",
+      "sha": "63c6c9358e7e4d30015450ce9189ca8c30aeb1f3"
+    },
+    {
+      "path": "docs/contract-events.md",
+      "mode": "100644",
+      "sha": "550ed432de2b8593bc969044caf7dc2536ab6e64"
+    },
+    {
+      "path": "docs/contributor-evaluation-policy.md",
+      "mode": "100644",
+      "sha": "7aa3dab351fdaf7a29d1ae4ef841fc8660ea93fb"
+    },
+    {
+      "path": "docs/contributor-payment-guide.md",
+      "mode": "100644",
+      "sha": "bd1d2564ab5239f77902aff11a8a48fa2446ab3b"
+    },
+    {
+      "path": "docs/contributor-test-matrix.md",
+      "mode": "100644",
+      "sha": "eef9c487b3b377eec4465bdf49b0fb14a7e39b9e"
+    },
+    {
+      "path": "docs/environments.md",
+      "mode": "100644",
+      "sha": "dc50f349019012bb2bf926908afce0869419dea8"
+    },
+    {
+      "path": "docs/investor-portfolio.md",
+      "mode": "100644",
+      "sha": "308740f7308497f3205a77b25569bf12945f65e8"
+    },
+    {
+      "path": "docs/issue-approval-readiness.md",
+      "mode": "100644",
+      "sha": "f992d34d2bde112931c009b957f291aae9782cbc"
+    },
+    {
+      "path": "docs/low-effort-pr-examples.md",
+      "mode": "100644",
+      "sha": "a5f4a6c91f4cdbdb1a9251423a1459b07602eaf0"
+    },
+    {
+      "path": "docs/meaningful-change-threshold.md",
+      "mode": "100644",
+      "sha": "2de74a5567bde3c3e8f9d69aabe668eb66ae7ad3"
+    },
+    {
+      "path": "docs/meaningful-implementation-checklist.md",
+      "mode": "100644",
+      "sha": "a638bbaada6dc82a0c9a8ad85150cdc961fcee7a"
+    },
+    {
+      "path": "docs/migration-guide.md",
+      "mode": "100644",
+      "sha": "512c9bf77b8b997f28cad117bbfca950263ab226"
+    },
+    {
+      "path": "docs/network-failures.md",
+      "mode": "100644",
+      "sha": "22ba6fa5898c30c4d3e1698efcd12a2ea1a4f460"
+    },
+    {
+      "path": "docs/payment-period-communication-policy.md",
+      "mode": "100644",
+      "sha": "8d6efc6f66ede62d96ca8478f4d7d09e25f35530"
+    },
+    {
+      "path": "docs/payment-period-conduct.md",
+      "mode": "100644",
+      "sha": "6ef63a0f538894c7b661d1a44e4dd55ebddf558c"
+    },
+    {
+      "path": "docs/pr-evidence-checklist.md",
+      "mode": "100644",
+      "sha": "96e6410a868d4c7bebf5e1a87d64a3cc6bfbc1ab"
+    },
+    {
+      "path": "docs/release-checklist.md",
+      "mode": "100644",
+      "sha": "9b2e1352ef2385ab07791219e0cd3f663ca5aae8"
+    },
+    {
+      "path": "docs/reviewer-checklist.md",
+      "mode": "100644",
+      "sha": "1350bd901d42c574c32fcaba4e8935119df2ede8"
+    },
+    {
+      "path": "docs/role-aware-client-factory.md",
+      "mode": "100644",
+      "sha": "41afd00b7def758853628b0f2083edcac3ad9766"
+    },
+    {
+      "path": "docs/role-discovery.md",
+      "mode": "100644",
+      "sha": "ce52da34b09eb8dc0387a8e9cef046b6b54dc112"
+    },
+    {
+      "path": "docs/runtime-compatibility.md",
+      "mode": "100644",
+      "sha": "c5eeeffea71d92753e049cee965e492aecef2f48"
+    },
+    {
+      "path": "docs/self-review-template.md",
+      "mode": "100644",
+      "sha": "46c74a06842e6be89fa41cb0ba0f076d73307f3d"
+    },
+    {
+      "path": "docs/test-first-contribution-guide.md",
+      "mode": "100644",
+      "sha": "fcd8d03a3d12c03e3c8985b6ce104000203e8f23"
+    },
+    {
+      "path": "docs/test-first-contribution.md",
+      "mode": "100644",
+      "sha": "9986fb0b85d6efb403454494eb82302152df6a37"
+    },
+    {
+      "path": "docs/testing-evidence-requirement.md",
+      "mode": "100644",
+      "sha": "1cd49ed6925af71a8023b7886d905a89ccc3846a"
+    },
+    {
+      "path": "docs/testing.md",
+      "mode": "100644",
+      "sha": "c92da79c888067dd37d3e86677e346b352672e1e"
+    },
+    {
+      "path": "docs/verification.md",
+      "mode": "100644",
+      "sha": "c8fcafeb41cc1efd4ab52ac5b719f3a4fe5ff4b1"
+    },
+    {
+      "path": "examples/migration/compliance-before-after.ts",
+      "mode": "100644",
+      "sha": "97ab94f4f63106b6b1dbcfed71d897f396f265a3"
+    },
+    {
+      "path": "examples/migration/error-handling-before-after.ts",
+      "mode": "100644",
+      "sha": "22c4f19e1e5a529995cbe62b736b178b94deb575"
+    },
+    {
+      "path": "examples/migration/mint-transfer-before-after.ts",
+      "mode": "100644",
+      "sha": "9a9f1fa1534346443cd72b269ee7bed513a308f2"
+    },
+    {
+      "path": "examples/migration/portfolio-before-after.ts",
+      "mode": "100644",
+      "sha": "f4e057cc20dcd84309fc95f002f3c2f96bf316ce"
+    },
+    {
+      "path": "jest.config.js",
+      "mode": "100644",
+      "sha": "b08a66336dd5a02f888cf01d980c0934ea6acd39"
+    },
+    {
+      "path": "package-lock.json",
+      "mode": "100644",
+      "sha": "d49d5ede780f1cea5d6835154e59f3e241952798"
+    },
+    {
+      "path": "package.json",
+      "mode": "100644",
+      "sha": "03b1908c19af0e259596dbd86684e6d79deb434e"
+    },
+    {
+      "path": "scripts/check-compat.mjs",
+      "mode": "100644",
+      "sha": "22ef39c9b2947bd854f2d21d583f18c34aaaac57"
+    },
+    {
+      "path": "src/admin/receipts.ts",
+      "mode": "100644",
+      "sha": "d3e21ebeb3c3fc73a304f3687f7e72e8d6e7a982"
+    },
+    {
+      "path": "src/asset.ts",
+      "mode": "100644",
+      "sha": "0b5922dc115fbdc30ccb66b411e4b6a6b07b9187"
+    },
+    {
+      "path": "src/client-factory.ts",
+      "mode": "100644",
+      "sha": "fd891c7d39e4a2a879360bdc90f28e434c0fc6a0"
+    },
+    {
+      "path": "src/client.ts",
+      "mode": "100644",
+      "sha": "bf959efc3e790a4f1139f1d3f5ef62cacaaea42e"
+    },
+    {
+      "path": "src/compliance.ts",
+      "mode": "100644",
+      "sha": "04e0be7d0b562ca2172fb07d6f9fa1890952e6be"
+    },
+    {
+      "path": "src/config/environments.ts",
+      "mode": "100644",
+      "sha": "38d913f0d95f8cb3f03d46a9b499e84823109f79"
+    },
+    {
+      "path": "src/config/validate.ts",
+      "mode": "100644",
+      "sha": "7b179c3507ea03154073c27022f7d0c19e9c47a8"
+    },
+    {
+      "path": "src/diagnostics/network.ts",
+      "mode": "100644",
+      "sha": "a2955a554cb6fee7d2b7f6b5d3fdc730130edc7a"
+    },
+    {
+      "path": "src/errors/client-factory.ts",
+      "mode": "100644",
+      "sha": "44e53cd20a74157513bde518e46d16ff9ae7baa0"
+    },
+    {
+      "path": "src/errors/config.ts",
+      "mode": "100644",
+      "sha": "fedf47606ba794f322c8b076f30269096e52bef9"
+    },
+    {
+      "path": "src/errors/event.ts",
+      "mode": "100644",
+      "sha": "ef9948cb987b49e35d867b328468d5dbd8bf6ccc"
+    },
+    {
+      "path": "src/errors/network.ts",
+      "mode": "100644",
+      "sha": "afe58f1b9531b08aa9962fbd0cdd7bf30aee397e"
+    },
+    {
+      "path": "src/errors/portfolio.ts",
+      "mode": "100644",
+      "sha": "f467f0417770d48b90ee607aa8d9829fac4813ee"
+    },
+    {
+      "path": "src/errors/role.ts",
+      "mode": "100644",
+      "sha": "b84eddf8c9d0081821aeb3fa1846fded07569eef"
+    },
+    {
+      "path": "src/events/decoder.ts",
+      "mode": "100644",
+      "sha": "780bb9dc59d9876acd3f0640a7ec7216d370c675"
+    },
+    {
+      "path": "src/events/module.ts",
+      "mode": "100644",
+      "sha": "503f317dcfb3f281686c7e7a4ab35adaeaf71b79"
+    },
+    {
+      "path": "src/events/topics.ts",
+      "mode": "100644",
+      "sha": "f51fe89a31b90d6eeba5c6b87ef1c92a35c340bb"
+    },
+    {
+      "path": "src/index.ts",
+      "mode": "100644",
+      "sha": "b498dcfb2008865b3a98ad0ceaa330ff7a89a547"
+    },
+    {
+      "path": "src/investor/portfolio.ts",
+      "mode": "100644",
+      "sha": "7574b785a303ff4cb39a40bde82df3e9f413a7c1"
+    },
+    {
+      "path": "src/network/failures.ts",
+      "mode": "100644",
+      "sha": "872a5409d2f0c87657a6998a1303c659a0ca7380"
+    },
+    {
+      "path": "src/role.ts",
+      "mode": "100644",
+      "sha": "0239d03b21535147697fa73bd54763597c23bb8a"
+    },
+    {
+      "path": "src/soroban/scval.ts",
+      "mode": "100644",
+      "sha": "2d7faa9c31dbbf5960aa93c59f7d6127091e44eb"
+    },
+    {
+      "path": "src/testing/fixtures.ts",
+      "mode": "100644",
+      "sha": "08ca6680fc1eda2ff9663cb8d8637e0cee0b75ab"
+    },
+    {
+      "path": "src/testing/index.ts",
+      "mode": "100644",
+      "sha": "1c8fc612a4088d4f9b87ac432849e9b030c5158d"
+    },
+    {
+      "path": "src/testing/mock-client.ts",
+      "mode": "100644",
+      "sha": "0eed26507070cbf74a13889c80421e02645e6122"
+    },
+    {
+      "path": "src/types/admin-receipt.ts",
+      "mode": "100644",
+      "sha": "c908b129bbed9b72c6959b6abdc3dbf7e4d0ec07"
+    },
+    {
+      "path": "src/types/client-factory.ts",
+      "mode": "100644",
+      "sha": "57ec5a972c1b1b017e3b9ef394215053d25f4729"
+    },
+    {
+      "path": "src/types/contract-event.ts",
+      "mode": "100644",
+      "sha": "d79d92e87ddb04e4ea9012e28603137723b1b51e"
+    },
+    {
+      "path": "src/types/portfolio.ts",
+      "mode": "100644",
+      "sha": "e777cc3c0ef7deae4440933b909fb400f9e3cfb7"
+    },
+    {
+      "path": "src/types/role.ts",
+      "mode": "100644",
+      "sha": "35eb96eaa0c0d5503095949323192212c751184d"
+    },
+    {
+      "path": "src/utils/xdr-parser.ts",
+      "mode": "100644",
+      "sha": "bf4ef22fc8495362501e254cbdfddc1b13277bae"
+    },
+    {
+      "path": "tests/admin-receipts.test.ts",
+      "mode": "100644",
+      "sha": "2f7ac172524a2276daa52e2e589583a15350b445"
+    },
+    {
+      "path": "tests/client-factory.test.ts",
+      "mode": "100644",
+      "sha": "300324695f3d06c11e3c0f83cb338c9892586638"
+    },
+    {
+      "path": "tests/client.test.ts",
+      "mode": "100644",
+      "sha": "4c7e139445bca19a9a29c920f3231d5ca4b75906"
+    },
+    {
+      "path": "tests/compat/browser-smoke.ts",
+      "mode": "100644",
+      "sha": "220331d00fdcf34ed184bf91718509e7aed39e0e"
+    },
+    {
+      "path": "tests/compat/node-smoke.ts",
+      "mode": "100644",
+      "sha": "4899edb4ca22a42d0458d1220879a317f8052ae4"
+    },
+    {
+      "path": "tests/config.test.ts",
+      "mode": "100644",
+      "sha": "a4257cbc68e53ed1830377c2d8e22bd796c6222a"
+    },
+    {
+      "path": "tests/events-decoder.test.ts",
+      "mode": "100644",
+      "sha": "fbdbfce6564d65ce7e77bb8b2572132a278c530b"
+    },
+    {
+      "path": "tests/events-module.test.ts",
+      "mode": "100644",
+      "sha": "0d6ae71e3255f575169a23e1602de264ea80360d"
+    },
+    {
+      "path": "tests/fixtures/contract-events.ts",
+      "mode": "100644",
+      "sha": "0f28ab42e2b712189f72f5eafe5e5b2ee04c64cb"
+    },
+    {
+      "path": "tests/investor.test.ts",
+      "mode": "100644",
+      "sha": "a8f5276e888644e41709a563079086c2f42eda4c"
+    },
+    {
+      "path": "tests/mock-client-examples.test.ts",
+      "mode": "100644",
+      "sha": "119e3c7eeda292f72d336b0ef922cddc15cdf74c"
+    },
+    {
+      "path": "tests/mock-client.test.ts",
+      "mode": "100644",
+      "sha": "6a3f2220432548acc9b64733127cd47a9205d664"
+    },
+    {
+      "path": "tests/network-failures.test.ts",
+      "mode": "100644",
+      "sha": "f04545519cc06c43f9c52caf6f6d75e95c1c0929"
+    },
+    {
+      "path": "tests/role.test.ts",
+      "mode": "100644",
+      "sha": "cfe06e18ceb2b834df45d1a5516d751bb43dc4fa"
+    },
+    {
+      "path": "tsconfig.json",
+      "mode": "100644",
+      "sha": "ff457865dbd0be16ed9cba655afdce607805044c"
+    }
+  ],
+  "dashboard_head": "8e974baed2e120fc826ceb087f1d732de6cbbec8",
+  "dashboard_tree": "9891a2fbadf34de4adc6b46dc587648cf2bd0066",
+  "audit": {
+    "source_head": "e31436ca161bef7089356f8d888c7227653b7d84",
+    "source_tree": "5f89d04ac77aed62aa992127144cae14676eacce",
+    "base": "69fff2c7e8c6fe801428fc1bb71d064c5c94949c",
+    "base_tree": "4f8bb78da0096e969c57f148ddef05c195a00671",
+    "base_blob_count": 99,
+    "candidate_blob_count": 100,
+    "unchanged_base_blob_count": 98,
+    "changes": [
+      {
+        "path": "README.md",
+        "before": "4d2bb5a126aebd7e55f5e8316d6a98becffccf7d",
+        "after": "5e77bd3c0f8d6db4574a73b68f71f51ad8a2cd6e",
+        "status": "modified"
+      },
+      {
+        "path": "docs/public-api-compatibility.md",
+        "after": "ea59bd3865e2a5155e9a910f8654fb720c5c646c",
+        "status": "added"
+      }
+    ],
+    "readme_link_present": true,
+    "related_doc_links_verified": [
+      "docs/api-reference.md",
+      "docs/role-aware-client-factory.md",
+      "docs/contract-events.md",
+      "docs/runtime-compatibility.md"
+    ],
+    "dashboard_main": "8e974baed2e120fc826ceb087f1d732de6cbbec8",
+    "dashboard_tree": "9891a2fbadf34de4adc6b46dc587648cf2bd0066",
+    "dashboard_targets_verified": [
+      "docs/compliance-status-panel.md",
+      "docs/investor-onboarding-eligibility.md",
+      "docs/investor-transfer-eligibility.md",
+      "docs/rwa-asset-minting-workflow.md",
+      "docs/transaction-review-modal.md",
+      "docs/admin-action-receipts.md",
+      "docs/route-access.md"
+    ],
+    "package_entrypoints": [
+      ".",
+      "./testing"
+    ],
+    "package_git_blob": "03b1908c19af0e259596dbd86684e6d79deb434e",
+    "lock_git_blob": "d49d5ede780f1cea5d6835154e59f3e241952798",
+    "source_contract_tokens_verified": {
+      "whitelist": true,
+      "mint": true,
+      "transfer": true,
+      "balance": true,
+      "events": true
+    },
+    "unit_test_execution": "not executed; documentation-only carrier",
+    "native_current_head_workflow_runs": 0
+  }
+}

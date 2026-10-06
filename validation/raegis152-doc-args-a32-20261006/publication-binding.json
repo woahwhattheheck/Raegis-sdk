@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-06T00:30:23.847Z",
+  "repository": "woahwhattheheck/Raegis-sdk",
+  "canonical_pr": "https://github.com/Raegis-RWA/Raegis-sdk/pull/172",
+  "evidence_branch": "validation/raegis152-doc-args-a32-20261006",
+  "published_source_commit": "a32ea132b95cfb2d68b76407ff06a7e6d47df6f6",
+  "published_source_tree": "ccac3f6b8f0bbf21f948d064c7bf2af54fcf5b68",
+  "published_source_sole_parent": "e31436ca161bef7089356f8d888c7227653b7d84",
+  "tested_local_prospective_tree": "ccac3f6b8f0bbf21f948d064c7bf2af54fcf5b68",
+  "attribution": "Outside publisher applied the two-row correction on existing PR172. Codex independently verified its byte identity to the frozen local proposal. Codex did not update a source ref or create another PR.",
+  "checkout_attribution": "Documentation/source-argument/tree/link/whitespace checks ran against frozen local proposed files; commit a32 was not checked out before those existing checks. Immutable native a32 tree/doc readback exactly matches the proposal.",
+  "frozen_proposal_receipt": {
+    "path": "proposal-receipt.json",
+    "bytes": 5096,
+    "sha256": "50007eae2557a7034cd25f0280d3f59846be9efb8cc8a90653fbe9ca038f8125",
+    "unchanged": true
+  },
+  "source_doc": {
+    "path": "docs/public-api-compatibility.md",
+    "git_blob": "b240841b7ae93ced13f29cc875e04c9a35163068",
+    "bytes": 10365,
+    "sha256": "f34c532fc2b6bcbec16e76b3ec63e7036a05d0c153e72fe1076b50135af14d80"
+  },
+  "native_readbacks": {
+    "canonical_ref": {
+      "repository": "woahwhattheheck/Raegis-sdk",
+      "ref": "refs/heads/docs/compat-matrix-152",
+      "sha": "a32ea132b95cfb2d68b76407ff06a7e6d47df6f6"
+    },
+    "pr": {
+      "number": 172,
+      "state": "open",
+      "draft": false,
+      "merged": false,
+      "author": "woahwhattheheck",
+      "title": "docs: add public API compatibility matrix",
+      "head": "a32ea132b95cfb2d68b76407ff06a7e6d47df6f6",
+      "base": "69fff2c7e8c6fe801428fc1bb71d064c5c94949c",
+      "body_unchanged_at_observation": true
+    },
+    "commit": {
+      "sha": "a32ea132b95cfb2d68b76407ff06a7e6d47df6f6",
+      "tree": "ccac3f6b8f0bbf21f948d064c7bf2af54fcf5b68",
+      "parents": [
+        "e31436ca161bef7089356f8d888c7227653b7d84"
+      ]
+    },
+    "compare": {
+      "commits": 1,
+      "ahead": 1,
+      "behind": 0,
+      "files_changed": 1,
+      "additions": 2,
+      "deletions": 2
+    },
+    "tree": {
+      "truncated": false,
+      "blobs": 100,
+      "unchanged_from_e314": 99,
+      "changed": 1,
+      "added": 0,
+      "deleted": 0
+    },
+    "native_doc_matches_frozen": true
+  },
+  "checks": {
+    "source_argument_and_pure_tree_verifier_exit": 0,
+    "patch_apply_check_whitespace_error_all_exit": 0,
+    "markdown_readme_four_sdk_seven_dashboard_links_exit": 0,
+    "commands_file": "owner/commands.json"
+  },
+  "ci_observation": {
+    "source_blobs": 100,
+    "unchanged": 99,
+    "changed": 1,
+    "added": 0,
+    "deleted": 0,
+    "source_tree": "ccac3f6b8f0bbf21f948d064c7bf2af54fcf5b68",
+    "source_commit": "a32ea132b95cfb2d68b76407ff06a7e6d47df6f6",
+    "workflow_run": 37393998802,
+    "status": "completed",
+    "conclusion": "action_required",
+    "jobs_total": 0,
+    "job_execution_claim": false
+  },
+  "custody": {
+    "outside_take": "https://tokenjunkielabs.slack.com/archives/C0BU51F1PL3/p1791246347933949",
+    "outside_done_release": "https://tokenjunkielabs.slack.com/archives/C0BU51F1PL3/p1791246411738839",
+    "source_backed_handoff": "https://tokenjunkielabs.slack.com/archives/C0BU51F1PL3/p1791246222072639",
+    "codex_obsolete_take_release": "https://tokenjunkielabs.slack.com/archives/C0BU51F1PL3/p1791246544419109?thread_ts=1791225131.551339&cid=C0BU51F1PL3"
+  },
+  "limits": {
+    "sdk_build_lint_format_unit_test_release_gate_executed": false,
+    "live_contract_or_dashboard_execution": false,
+    "hosted_ci_pass_claim": false,
+    "required_review_ci_gates_pending": true,
+    "unattached_local_created_commit": "354a9ac4a93f6745a957708547cc31a7cdab3524",
+    "unattached_commit_not_a_canonical_ref_or_dispatched_source": true
+  }
+}

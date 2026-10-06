@@ -1,0 +1,20 @@
+{
+  "relative_links_verified": [
+    "docs/api-reference.md",
+    "docs/role-aware-client-factory.md",
+    "docs/contract-events.md",
+    "docs/runtime-compatibility.md"
+  ],
+  "dashboard_doc_targets_verified": [
+    "docs/compliance-status-panel.md",
+    "docs/investor-onboarding-eligibility.md",
+    "docs/investor-transfer-eligibility.md",
+    "docs/rwa-asset-minting-workflow.md",
+    "docs/transaction-review-modal.md",
+    "docs/admin-action-receipts.md",
+    "docs/route-access.md"
+  ],
+  "readme_link": true,
+  "exit_code": 0,
+  "transport_used": "native read only pinned GitHub file/tree APIs; no live contract/dashboard execution"
+}

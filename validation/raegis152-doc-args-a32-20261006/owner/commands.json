@@ -1,0 +1,25 @@
+{
+  "commands": [
+    {
+      "command": "python verify-proposal.py",
+      "cwd": "/workspace/scratch/ea8baa184658/raegis152-two-row-proposal-20261006",
+      "exit_code": 0,
+      "stdout_file": "owner/proposal-verifier.log"
+    },
+    {
+      "command": "git apply --check --whitespace=error-all ../two-contract-rows.patch",
+      "cwd": "/workspace/scratch/ea8baa184658/raegis152-two-row-proposal-20261006/original",
+      "exit_code": 0,
+      "stdout_file": "owner/patch-whitespace-check.log"
+    }
+  ],
+  "markdown_check_file": "owner/markdown-link-check.json",
+  "limits": {
+    "sdk_build": false,
+    "sdk_lint": false,
+    "sdk_format": false,
+    "sdk_unit_tests": false,
+    "sdk_full_release_gate": false,
+    "live_contract_or_dashboard": false
+  }
+}
