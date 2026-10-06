@@ -274,9 +274,9 @@ function mapAdminReceipt(
   }
 }
 
-function buildBase(
+function buildBase<K extends AegisActivityKind>(
   source: AegisActivitySource,
-  kind: AegisActivityKind,
+  kind: K,
   status: AegisActivityStatus,
   transactionHash: string | null,
   observedAt: string,
@@ -284,7 +284,7 @@ function buildBase(
   contractId: string | undefined,
   position: number,
   summary: string,
-): AegisActivityBase {
+): AegisActivityBase & { kind: K } {
   return {
     id: buildActivityId(source, kind, transactionHash, ledger, position),
     source,
