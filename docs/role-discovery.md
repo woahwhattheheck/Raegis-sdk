@@ -22,6 +22,10 @@ state-changing transaction. The contract itself is always the final authority on
 whether a transaction is actually permitted to succeed — always simulate/submit
 through `AssetModule` and handle rejection, regardless of what `RoleModule` reports.
 
+For the wider responsibility boundary across whitelist state, role predictions,
+contract events, receipts, dashboard presentation, and off-chain policy decisions,
+see [Compliance and legal boundaries](./compliance-boundaries.md).
+
 Because of this, `admin` and `issuer` roles cannot currently be discovered — only
 `investor` (whitelisted), `unauthorized` (not whitelisted), and `unknown` (address
 invalid or the compliance query failed) are distinguishable today. Admin/issuer
