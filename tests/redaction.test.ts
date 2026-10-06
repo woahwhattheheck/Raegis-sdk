@@ -1,0 +1,56 @@
+import {
+  REDACTED_VALUE,
+  classifyNetworkFailure,
+  redactSensitiveText,
+  redactSensitiveValue,
+} from '../src';
+
+describe('secret redaction', () => {
+  const stellarSecret = `S${'A'.repeat(55)}`;
+  const transactionXdr = `AAAA${'B'.repeat(120)}`;
+
+  it('redacts secret keys, bearer tokens, and transaction payloads from text', () => {
+    const input =
+      `submit failed secret=${stellarSecret} authorization=Bearer header.payload.sig xdr=${transactionXdr}`;
+    const redacted = redactSensitiveText(input);
+
+    expect(redacted).not.toContain(stellarSecret);
+    expect(redacted).not.toContain('header.payload.sig');
+    expect(redacted).not.toContain(transactionXdr);
+    expect(redacted.match(/\[REDACTED\]/g)?.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('returns a bounded safe copy of nested support data', () => {
+    const redacted = redactSensitiveValue({
+      requestId: 'req-123',
+      secretKey: stellarSecret,
+      nested: {
+        message: `provider rejected ${stellarSecret}`,
+        signature: 'abcdef',
+      },
+    });
+
+    expect(redacted).toEqual({
+      requestId: 'req-123',
+      secretKey: REDACTED_VALUE,
+      nested: {
+        message: `provider rejected ${REDACTED_VALUE}`,
+        signature: REDACTED_VALUE,
+      },
+    });
+  });
+
+  it('sanitizes retained network failure causes', () => {
+    const failure = classifyNetworkFailure({
+      code: 'ECONNRESET',
+      message: `socket reset for ${stellarSecret}`,
+      authorization: 'Bearer private-token',
+    });
+    const cause = JSON.stringify(failure.cause);
+
+    expect(failure.code).toBe('RPC_UNAVAILABLE');
+    expect(cause).not.toContain(stellarSecret);
+    expect(cause).not.toContain('private-token');
+    expect(cause).toContain(REDACTED_VALUE);
+  });
+});
