@@ -72,7 +72,7 @@ function optionalString(
  * This validates metadata structure only; it does not establish contract,
  * issuer, compliance, or legal state.
  */
-export function parseRwaAssetMetadata(input: unknown): AssetMetadata {
+export function parseAssetMetadata(input: unknown): AssetMetadata {
   if (!isRecord(input)) {
     throw new AssetMetadataValidationError([
       {
@@ -135,9 +135,9 @@ export function parseRwaAssetMetadata(input: unknown): AssetMetadata {
   return parsed;
 }
 
-export function safeParseRwaAssetMetadata(input: unknown): SafeAssetMetadataParseResult {
+export function safeParseAssetMetadata(input: unknown): SafeAssetMetadataParseResult {
   try {
-    return { success: true, data: parseRwaAssetMetadata(input) };
+    return { success: true, data: parseAssetMetadata(input) };
   } catch (error) {
     if (error instanceof AssetMetadataValidationError) {
       return { success: false, error };
@@ -146,6 +146,6 @@ export function safeParseRwaAssetMetadata(input: unknown): SafeAssetMetadataPars
   }
 }
 
-export function isRwaAssetMetadata(input: unknown): input is AssetMetadata {
-  return safeParseRwaAssetMetadata(input).success;
+export function isAssetMetadata(input: unknown): input is AssetMetadata {
+  return safeParseAssetMetadata(input).success;
 }
