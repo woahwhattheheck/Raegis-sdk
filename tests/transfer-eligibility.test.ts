@@ -1,8 +1,10 @@
+import { StrKey } from '@stellar/stellar-sdk';
 import { InvestorModule } from '../src/investor/portfolio';
 import type { WhitelistObservation } from '../src/types/transfer-eligibility';
 
-const SOURCE = 'G' + 'A'.repeat(55);
-const DESTINATION = 'G' + 'B'.repeat(55);
+const SOURCE = StrKey.encodeEd25519PublicKey(Buffer.alloc(32, 1));
+const DESTINATION = StrKey.encodeEd25519PublicKey(Buffer.alloc(32, 2));
+const INVALID_CHECKSUM_SOURCE = `${SOURCE.slice(0, -1)}${SOURCE.endsWith('A') ? 'B' : 'A'}`;
 
 function observation(
   address: string,
@@ -36,6 +38,22 @@ describe('InvestorModule.checkTransferEligibility', () => {
   it('rejects malformed source before network work', async () => {
     const { investor, observeWhitelist } = moduleWith({});
     const result = await investor.checkTransferEligibility('bad', DESTINATION, 1);
+
+    expect(result).toMatchObject({
+      state: 'ineligible',
+      isEligible: false,
+      code: 'INVALID_SOURCE_ADDRESS',
+    });
+    expect(observeWhitelist).not.toHaveBeenCalled();
+  });
+
+  it('rejects checksum-invalid source before network work', async () => {
+    const { investor, observeWhitelist } = moduleWith({});
+    const result = await investor.checkTransferEligibility(
+      INVALID_CHECKSUM_SOURCE,
+      DESTINATION,
+      1,
+    );
 
     expect(result).toMatchObject({
       state: 'ineligible',
