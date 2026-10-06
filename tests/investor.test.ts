@@ -1,6 +1,10 @@
 import { AegisClient } from '../src/client';
-import { InvestorModule } from '../src/investor/portfolio';
-import { Networks, Keypair, rpc, xdr, nativeToScVal, StrKey } from '@stellar/stellar-sdk';
+import {
+  buildMockBooleanSimulationResult,
+  buildMockI128SimulationResult,
+  createDeterministicComplianceFixtures,
+} from '../src/testing/fixtures';
+import { Networks, rpc } from '@stellar/stellar-sdk';
 
 jest.mock('@stellar/stellar-sdk', () => {
   const original = jest.requireActual('@stellar/stellar-sdk');
@@ -23,8 +27,8 @@ describe('InvestorModule (Portfolio Read Model)', () => {
   let client: AegisClient;
   let mockRpcServer: any;
 
-  const mockContractId = 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4';
-  const mockInvestorAddress = Keypair.random().publicKey();
+  const fixtures = createDeterministicComplianceFixtures();
+  const mockContractId = fixtures.contractId;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -42,22 +46,17 @@ describe('InvestorModule (Portfolio Read Model)', () => {
     it('should correctly build an active portfolio for a whitelisted investor with balances', async () => {
       (rpc.Api.isSimulationSuccess as unknown as jest.Mock).mockReturnValue(true);
 
-      const trueScValBase64 = xdr.ScVal.scvBool(true).toXDR('base64');
-      const balanceScValBase64 = xdr.ScVal.scvI128(
-        new xdr.Int128Parts({ hi: xdr.Int64.fromString('0'), lo: xdr.Uint64.fromString('5000000000') })
-      ).toXDR('base64');
-
       mockRpcServer.simulateTransaction
-        .mockResolvedValueOnce({
-          result: { retval: trueScValBase64 },
-        })
-        .mockResolvedValueOnce({
-          result: { retval: balanceScValBase64 },
-        });
+        .mockResolvedValueOnce(buildMockBooleanSimulationResult(true))
+        .mockResolvedValueOnce(buildMockI128SimulationResult(5_000_000_000n));
 
-      const portfolio = await client.investor.getPortfolio(mockInvestorAddress);
+      const portfolio = await client.investor.getPortfolio(
+        fixtures.accounts.approvedInvestor.address
+      );
 
-      expect(portfolio.investorAddress).toBe(mockInvestorAddress);
+      expect(portfolio.investorAddress).toBe(
+        fixtures.accounts.approvedInvestor.address
+      );
       expect(portfolio.status).toBe('active');
       expect(portfolio.isKycApproved).toBe(true);
       expect(portfolio.isBlocked).toBe(false);
@@ -77,20 +76,13 @@ describe('InvestorModule (Portfolio Read Model)', () => {
     it('should return an empty status portfolio when investor has zero balances', async () => {
       (rpc.Api.isSimulationSuccess as unknown as jest.Mock).mockReturnValue(true);
 
-      const trueScValBase64 = xdr.ScVal.scvBool(true).toXDR('base64');
-      const zeroBalanceScValBase64 = xdr.ScVal.scvI128(
-        new xdr.Int128Parts({ hi: xdr.Int64.fromString('0'), lo: xdr.Uint64.fromString('0') })
-      ).toXDR('base64');
-
       mockRpcServer.simulateTransaction
-        .mockResolvedValueOnce({
-          result: { retval: trueScValBase64 },
-        })
-        .mockResolvedValueOnce({
-          result: { retval: zeroBalanceScValBase64 },
-        });
+        .mockResolvedValueOnce(buildMockBooleanSimulationResult(true))
+        .mockResolvedValueOnce(buildMockI128SimulationResult(0n));
 
-      const portfolio = await client.investor.getPortfolio(mockInvestorAddress);
+      const portfolio = await client.investor.getPortfolio(
+        fixtures.accounts.approvedInvestor.address
+      );
 
       expect(portfolio.status).toBe('empty');
       expect(portfolio.isKycApproved).toBe(true);
@@ -106,35 +98,34 @@ describe('InvestorModule (Portfolio Read Model)', () => {
     it('should return a blocked portfolio state when investor fails KYC/whitelist check', async () => {
       (rpc.Api.isSimulationSuccess as unknown as jest.Mock).mockReturnValue(true);
 
-      const falseScValBase64 = xdr.ScVal.scvBool(false).toXDR('base64');
-      const balanceScValBase64 = xdr.ScVal.scvI128(
-        new xdr.Int128Parts({ hi: xdr.Int64.fromString('0'), lo: xdr.Uint64.fromString('1000000000') })
-      ).toXDR('base64');
-
       mockRpcServer.simulateTransaction
-        .mockResolvedValueOnce({
-          result: { retval: falseScValBase64 },
-        })
-        .mockResolvedValueOnce({
-          result: { retval: balanceScValBase64 },
-        });
+        .mockResolvedValueOnce(buildMockBooleanSimulationResult(false))
+        .mockResolvedValueOnce(buildMockI128SimulationResult(1_000_000_000n));
 
-      const portfolio = await client.investor.getPortfolio(mockInvestorAddress);
+      const portfolio = await client.investor.getPortfolio(
+        fixtures.accounts.rejectedInvestor.address
+      );
 
       expect(portfolio.status).toBe('blocked');
       expect(portfolio.isKycApproved).toBe(false);
       expect(portfolio.isBlocked).toBe(true);
       expect(portfolio.holdings[0].isCompliant).toBe(false);
       expect(portfolio.holdings[0].transferEligibility.isEligible).toBe(false);
-      expect(portfolio.holdings[0].transferEligibility.code).toBe('NOT_WHITELISTED');
+      expect(portfolio.holdings[0].transferEligibility.code).toBe(
+        'NOT_WHITELISTED'
+      );
     });
   });
 
   describe('Unavailable Portfolio', () => {
     it('should safely return unavailable status when RPC simulation fails', async () => {
-      mockRpcServer.simulateTransaction.mockRejectedValue(new Error('Network RPC Connection Timeout'));
+      mockRpcServer.simulateTransaction.mockRejectedValue(
+        new Error('Network RPC Connection Timeout')
+      );
 
-      const portfolio = await client.investor.getPortfolio(mockInvestorAddress);
+      const portfolio = await client.investor.getPortfolio(
+        fixtures.accounts.unknownInvestor.address
+      );
 
       expect(portfolio.status).toBe('unavailable');
       expect(portfolio.isKycApproved).toBe(false);
