@@ -22,6 +22,16 @@ describe('secret redaction', () => {
     expect(redacted.match(/\[REDACTED\]/g)?.length).toBeGreaterThanOrEqual(4);
   });
 
+  it('redacts quoted key/value assignments in serialized diagnostic text', () => {
+    const redacted = redactSensitiveText(
+      'provider body {"password":"hunter2","token":"short-token"}',
+    );
+
+    expect(redacted).not.toContain('hunter2');
+    expect(redacted).not.toContain('short-token');
+    expect(redacted.match(/\\[REDACTED\\]/g)?.length).toBeGreaterThanOrEqual(2);
+  });
+
   it('returns a bounded safe copy of nested support data', () => {
     const redacted = redactSensitiveValue({
       requestId: 'req-123',
