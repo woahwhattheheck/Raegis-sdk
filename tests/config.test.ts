@@ -176,6 +176,27 @@ describe('AegisClient explicit (legacy) configuration', () => {
     ).toThrow(ConfigValidationError);
   });
 
+  it('rejects a registry selection when networkPassphrase disagrees with the named environment', () => {
+    const contractRegistry = defineContractRegistry({
+      testnet: {
+        protocol: mockContractId,
+      },
+    });
+
+    try {
+      new AegisClient({
+        environment: 'testnet',
+        contractRegistry,
+        contractName: 'protocol',
+        networkPassphrase: Networks.PUBLIC,
+      });
+      throw new Error('expected mismatched registry passphrase to throw');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConfigValidationError);
+      expect((error as ConfigValidationError).code).toBe('INVALID_NETWORK_PASSPHRASE');
+    }
+  });
+
   it('rejects ambiguous direct and registry contract selection', () => {
     const contractRegistry = defineContractRegistry({
       testnet: {
