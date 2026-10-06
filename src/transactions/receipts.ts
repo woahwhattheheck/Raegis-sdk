@@ -58,9 +58,10 @@ export function buildTransactionReceipt<TInput extends TransactionReceiptInput>(
   validateReceiptTarget(input);
 
   const status = normalizeTransactionReceiptStatus(input.status);
-  const transactionHash = input.transactionHash
-    ? normalizeTransactionHashCore(input.transactionHash, transactionReceiptError)
-    : null;
+  const transactionHash =
+    input.transactionHash == null
+      ? null
+      : normalizeTransactionHashCore(input.transactionHash, transactionReceiptError);
 
   if (status === 'success' && !transactionHash) {
     throw new TransactionReceiptError(
