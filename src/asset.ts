@@ -1,4 +1,4 @@
-import { Contract, nativeToScVal, TransactionBuilder } from '@stellar/stellar-sdk';
+import { Contract, nativeToScVal, TransactionBuilder, Account } from '@stellar/stellar-sdk';
 import { AegisClient } from './client';
 
 export class AssetModule {
@@ -67,7 +67,7 @@ constructor(client: AegisClient) {
       nativeToScVal(amount, { type: 'i128' })
     );
 
-    const sourceAccount = new (require('@stellar/stellar-sdk').Account)(signer.publicKey(), "0");
+    const sourceAccount = new Account(signer.publicKey(), "0");
 
     const tx = new TransactionBuilder(sourceAccount, {
       fee: "1000",
