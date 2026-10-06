@@ -71,5 +71,9 @@ transaction hash, explorer link, observation time, generated summary, and an
 optional safe failure code. Raw RPC responses, signatures, secret keys,
 envelopes, and arbitrary metadata are intentionally not copied.
 
+For ambiguous outcomes and privileged retry decisions, follow [Admin operation
+idempotency and retry guidance](./admin-operation-idempotency.md) before submitting
+another transaction.
+
 Receipts describe observed transaction state. They are not legal, financial, or
 compliance guarantees.
