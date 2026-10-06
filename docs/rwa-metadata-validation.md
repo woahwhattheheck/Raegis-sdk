@@ -32,7 +32,7 @@ const result = validateRwaMetadata({
   name: 'Harbor Street Property',
   symbol: 'HSP',
   decimals: 7,
-  issuer: 'G...',
+  issuer: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF',
   metadataUri: 'https://example.com/assets/001.json',
 });
 
