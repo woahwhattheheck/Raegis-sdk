@@ -8,6 +8,8 @@ import {
   xdr,
 } from '@stellar/stellar-sdk';
 import { SorobanInvocation } from '../src/soroban/invocation';
+import { ComplianceModule } from '../src/compliance';
+import type { AegisClient } from '../src/client';
 import { parseSorobanResult } from '../src/utils/xdr-parser';
 
 jest.mock('@stellar/stellar-sdk', () => {
@@ -93,6 +95,20 @@ describe('SorobanInvocation', () => {
     );
 
     expect(result).toBe(true);
+  });
+
+  it('decodes a real ScVal retval in a migrated compliance read', async () => {
+    const { invocation, rpcServer } = makeHarness(false);
+    (rpc.Api.isSimulationSuccess as unknown as jest.Mock).mockReturnValue(true);
+    rpcServer.simulateTransaction.mockResolvedValueOnce({
+      result: { retval: nativeToScVal(true) },
+    });
+
+    const module = new ComplianceModule({
+      invocation,
+    } as unknown as AegisClient);
+
+    await expect(module.checkWhitelist(signer.publicKey())).resolves.toBe(true);
   });
 
   it('returns a typed simulation failure instead of a false business result', async () => {
