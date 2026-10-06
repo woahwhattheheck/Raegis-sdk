@@ -1,5 +1,6 @@
 import { Networks } from '@stellar/stellar-sdk';
 import {
+  AegisActivityInput,
   AegisContractEvent,
   buildAdminActionReceipt,
   mapAegisActivity,
@@ -23,6 +24,19 @@ function transferEvent(overrides: Partial<AegisContractEvent> = {}): AegisContra
     ...overrides,
   } as AegisContractEvent;
 }
+
+const INVALID_ADMIN_TARGET = {
+  operation: 'whitelist-add',
+  target: { assetId: 'not-an-address' },
+  status: 'pending',
+  transactionHash: null,
+  explorerUrl: null,
+  observedAt: '2026-10-05T20:00:00.000Z',
+  summary: 'invalid',
+};
+// @ts-expect-error whitelist operations require an address target.
+const invalidAdminActivityInput: AegisActivityInput = INVALID_ADMIN_TARGET;
+void invalidAdminActivityInput;
 
 describe('Aegis activity mapper', () => {
   it('maps a decoded transfer into a confirmed typed activity', () => {
