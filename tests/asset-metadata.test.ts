@@ -99,14 +99,55 @@ describe('RWA asset metadata schema', () => {
   });
 
   it('rejects names outside the documented bounds', () => {
-    const result = rwaAssetMetadataSchema.safeParse({
-      ...validRwaAssetMetadataInput,
-      name: 'x',
+    const invalidNames = ['x', '😀😀', '😀'.repeat(129)];
+
+    for (const name of invalidNames) {
+      const result = rwaAssetMetadataSchema.safeParse({
+        ...validRwaAssetMetadataInput,
+        name,
+      });
+
+      expect(result).toMatchObject({
+        success: false,
+        error: { code: 'INVALID_NAME', field: 'name' },
+      });
+    }
+
+    expect(
+      rwaAssetMetadataSchema.safeParse({
+        ...validRwaAssetMetadataInput,
+        name: '😀'.repeat(65),
+      }).success
+    ).toBe(true);
+  });
+
+  it('reads only own data properties and keeps safeParse exception-free', () => {
+    const inherited = Object.create(validRwaAssetMetadataInput);
+    expect(rwaAssetMetadataSchema.safeParse(inherited)).toMatchObject({
+      success: false,
+      error: { code: 'INVALID_ISSUER', field: 'issuer' },
     });
 
-    expect(result).toMatchObject({
+    let getterCalls = 0;
+    const accessorMetadata = {
+      ...validRwaAssetMetadataInput,
+      get issuer(): string {
+        getterCalls += 1;
+        throw new Error('metadata accessors must not execute');
+      },
+    };
+
+    expect(rwaAssetMetadataSchema.safeParse(accessorMetadata)).toMatchObject({
       success: false,
-      error: { code: 'INVALID_NAME', field: 'name' },
+      error: { code: 'INVALID_METADATA', field: 'metadata' },
+    });
+    expect(getterCalls).toBe(0);
+
+    const { proxy, revoke } = Proxy.revocable({}, {});
+    revoke();
+    expect(rwaAssetMetadataSchema.safeParse(proxy)).toMatchObject({
+      success: false,
+      error: { code: 'INVALID_METADATA', field: 'metadata' },
     });
   });
 
@@ -136,3 +177,4 @@ describe('RWA asset metadata schema', () => {
     );
   });
 });
+

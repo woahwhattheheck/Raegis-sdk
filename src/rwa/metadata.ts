@@ -14,6 +14,7 @@ const SYMBOL_PATTERN = /^[A-Z0-9]{2,10}(-[A-Z0-9]{2,10})?$/;
 const STELLAR_ACCOUNT_PATTERN = /^G[A-Z2-7]{55}$/;
 const MAX_I128 = (1n << 127n) - 1n;
 const STATUS_SET = new Set<string>(RWA_ASSET_STATUSES);
+type MetadataField = Exclude<AssetMetadataField, 'metadata'>;
 
 function fail(
   field: AssetMetadataField,
@@ -24,10 +25,47 @@ function fail(
 }
 
 function objectInput(input: unknown): Record<string, unknown> {
-  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+  if (typeof input !== 'object' || input === null) {
+    return fail('metadata', 'INVALID_METADATA', 'metadata must be an object');
+  }
+
+  let isArray: boolean;
+  try {
+    isArray = Array.isArray(input);
+  } catch {
+    return fail('metadata', 'INVALID_METADATA', 'metadata must be an object');
+  }
+
+  if (isArray) {
     return fail('metadata', 'INVALID_METADATA', 'metadata must be an object');
   }
   return input as Record<string, unknown>;
+}
+
+function ownDataField(
+  metadata: Record<string, unknown>,
+  field: MetadataField
+): unknown {
+  try {
+    const descriptor = Object.getOwnPropertyDescriptor(metadata, field);
+    if (!descriptor) {
+      return undefined;
+    }
+    if (!('value' in descriptor)) {
+      return fail(
+        'metadata',
+        'INVALID_METADATA',
+        'metadata fields must be readable data properties'
+      );
+    }
+    return descriptor.value;
+  } catch {
+    return fail(
+      'metadata',
+      'INVALID_METADATA',
+      'metadata fields must be readable data properties'
+    );
+  }
 }
 
 function issuer(value: unknown): string {
@@ -65,7 +103,14 @@ function name(value: unknown): string {
     return fail('name', 'INVALID_NAME', 'name must be a string');
   }
   const normalized = value.trim();
-  if (normalized.length < 3 || normalized.length > 128) {
+  let characterCount = 0;
+  for (const _character of normalized) {
+    characterCount += 1;
+    if (characterCount > 128) {
+      break;
+    }
+  }
+  if (characterCount < 3 || characterCount > 128) {
     return fail('name', 'INVALID_NAME', 'name must contain 3-128 characters');
   }
   return normalized;
@@ -100,11 +145,11 @@ function supply(value: unknown): bigint {
 export function parseRwaAssetMetadata(input: unknown): RwaAssetMetadata {
   const metadata = objectInput(input);
   return {
-    issuer: issuer(metadata.issuer),
-    symbol: symbol(metadata.symbol),
-    name: name(metadata.name),
-    status: status(metadata.status),
-    supply: supply(metadata.supply),
+    issuer: issuer(ownDataField(metadata, 'issuer')),
+    symbol: symbol(ownDataField(metadata, 'symbol')),
+    name: name(ownDataField(metadata, 'name')),
+    status: status(ownDataField(metadata, 'status')),
+    supply: supply(ownDataField(metadata, 'supply')),
   };
 }
 
@@ -125,3 +170,4 @@ export const rwaAssetMetadataSchema = {
     }
   },
 };
+
