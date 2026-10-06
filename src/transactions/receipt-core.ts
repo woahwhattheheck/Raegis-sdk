@@ -58,7 +58,7 @@ export function buildTransactionExplorerUrlCore(
   explorerBaseUrl: string | undefined,
   errorFactory: ReceiptErrorFactory,
 ): string | null {
-  if (!transactionHash) return null;
+  if (transactionHash == null) return null;
 
   const normalizedHash = normalizeTransactionHashCore(transactionHash, errorFactory);
   const standardBase = EXPLORER_TRANSACTION_BASES[networkPassphrase];
