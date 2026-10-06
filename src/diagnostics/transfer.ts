@@ -9,6 +9,7 @@ export type TransferRestrictionStatus = 'ready' | 'restricted' | 'unknown';
 export type TransferRestrictionCode =
   | 'INVALID_AMOUNT'
   | 'SIGNER_MISMATCH'
+  | 'SIGNER_UNKNOWN'
   | 'SENDER_NOT_WHITELISTED'
   | 'RECIPIENT_NOT_WHITELISTED'
   | 'SENDER_WHITELIST_UNKNOWN'
@@ -97,7 +98,14 @@ export function diagnoseTransferRestrictions(
     });
   }
 
-  if (
+  if (input.senderAddress && !input.signerAddress) {
+    reasons.push({
+      code: 'SIGNER_UNKNOWN',
+      message: 'Expected transfer sender is known but signer identity was not supplied.',
+      action: 'use-expected-signer',
+      retryable: false,
+    });
+  } else if (
     input.senderAddress &&
     input.signerAddress &&
     input.senderAddress !== input.signerAddress
@@ -126,7 +134,9 @@ export function diagnoseTransferRestrictions(
   );
 
   const hasUnknown = reasons.some((reason) =>
-    reason.code.endsWith('_UNKNOWN') || reason.code.endsWith('_UNAVAILABLE'),
+    reason.code === 'SIGNER_UNKNOWN' ||
+    reason.code.endsWith('_UNKNOWN') ||
+    reason.code.endsWith('_UNAVAILABLE'),
   );
 
   const status: TransferRestrictionStatus = hasRestriction
