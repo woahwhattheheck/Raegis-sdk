@@ -42,6 +42,11 @@ capability flags for UI and tooling.
 - The current `ComplianceModule` exposes `checkWhitelist()` only. The
   compliance-operator role therefore provides the whitelist-access intent guard but
   does not add a whitelist mutation method to the typed surface today.
+- `checkWhitelist()` fails closed: it returns `false` both when the contract
+  reports a negative whitelist result and when simulation is unsuccessful or has no
+  result payload. Treat bare `false` as **approval not established**, not as proof of
+  an explicit denial. UI or audit copy should distinguish "not whitelisted" from
+  "query unavailable" only when separate error-aware evidence supports that wording.
 - Admin receipt operation names such as `whitelist-add`, `asset-register`, and
   `protocol-pause` describe typed receipt/audit data. `buildAdminActionReceipt()`
   does not execute those operations or grant permission to perform them.
@@ -90,6 +95,7 @@ still handling contract rejection when an operation is attempted.
 | Investor tries `asset.mint` on the typed surface | Method is absent at compile time/runtime surface. |
 | Investor intentionally calls `.client.asset.mint` | Bypasses the typed surface; contract authorization remains authoritative. |
 | Compliance-operator calls `assertWhitelistAccess()` | SDK declared-role guard passes; no on-chain role verification occurs. |
+| `checkWhitelist()` returns `false` | Approval is not established; the current boolean API also uses `false` for unsuccessful or result-less simulation, so explicit denial vs query unavailability requires separate error-aware evidence. |
 | Issuer calls `assertAdminAccess()` | Method is not exposed by the typed issuer interface. |
 | `RoleModule` is asked whether an address is an issuer/admin | It cannot make that determination today; only whitelist-derived roles are discoverable. |
 | Contract rejects a transaction that the matrix exposes | Contract result wins; the matrix is not an authorization guarantee. |
