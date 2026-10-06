@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const sdk = require('..');
+const sdk = require('@aegis/sdk');
 
 assert.equal(typeof sdk.AegisClient, 'function');
 assert.equal(typeof sdk.ConfigValidationError, 'function');
