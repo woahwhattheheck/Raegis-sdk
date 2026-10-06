@@ -101,6 +101,15 @@ export interface AegisReadOnlyClient {
   readonly role: ClientRole;
   /** The capability flags for this role. */
   readonly capabilities: RoleCapabilities;
+  /**
+   * Runtime guard for code paths that cannot rely on the narrowed TypeScript
+   * surface (for example, dynamic dispatch or explicit use of `.client`).
+   * Throws `RoleCapabilityError` when the declared role lacks the capability.
+   */
+  readonly assertCapability: (
+    flag: keyof Omit<RoleCapabilities, 'role'>,
+    operation?: string,
+  ) => void;
   /** The underlying `AegisClient` instance. */
   readonly client: AegisClient;
   /** Compliance query module (read-only: checkWhitelist). */
@@ -177,6 +186,12 @@ class RoleAwareClient implements AegisReadOnlyClient {
   public readonly investor: InvestorModule;
   public readonly events: EventsModule;
   public readonly role_module: RoleModule;
+  public readonly assertCapability = (
+    flag: keyof Omit<RoleCapabilities, 'role'>,
+    operation: string = flag,
+  ): void => {
+    assertCapability(this.capabilities, flag, operation);
+  };
 
   constructor(client: AegisClient, role: ClientRole) {
     this.role = role;
