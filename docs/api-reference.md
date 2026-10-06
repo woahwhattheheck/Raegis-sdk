@@ -70,6 +70,42 @@ try {
 
 > **Open note:** `checkWhitelist` passes the raw invocation object returned by `contract.call(...)` directly as the `transaction` field to `simulateTransaction` (cast through `as any`), rather than assembling a full `Transaction` via `TransactionBuilder` the way `AssetModule.mint`/`transfer` do. The source itself flags this with a comment ("Cast required depending on SDK version wrapper"), so the exact request shape expected by `simulateTransaction` across `@stellar/stellar-sdk` versions is not fully confirmed — verify against the installed SDK version rather than assuming it's stable.
 
+
+### `whitelist(address: string): Promise<string>`
+
+Submits the protocol's canonical `whitelist_user(admin, user)` operation using the configured signer as the admin address.
+
+**Signature**
+```typescript
+public async whitelist(address: string): Promise<string>
+```
+
+**Parameters**
+* `address` (string): Stellar public key to add to the protocol whitelist.
+
+**Returns**
+`Promise<string>` — the transaction hash returned after the prepared transaction is submitted.
+
+**Errors**
+* Throws if the client has no configured signer.
+* Account lookup, transaction preparation, and submission cross the SDK network-failure boundary and reject on RPC/network failure.
+
+**Transaction construction**
+The method fetches the signer's live account sequence, builds `whitelist_user(admin, user)`, calls Soroban RPC `prepareTransaction()`, signs the prepared envelope, and submits it.
+
+---
+
+## Admin CLI
+
+Installing the package exposes `aegis-cli` through the package `bin` mapping.
+
+```bash
+aegis-cli [--env-file <path>] whitelist <address>
+aegis-cli [--env-file <path>] mint <address> <amount>
+```
+
+By default the CLI reads `.env`; `--env-file` selects another file. Process environment values override file values. `AEGIS_ADMIN_SECRET` and `AEGIS_CONTRACT_ID` are required. The CLI supports the same environment/RPC/network overrides as `AegisClient`, including explicit mainnet opt-in, and prints the submitted transaction hash on success. Mint amounts must be positive safe integers. Operation error output redacts the configured admin secret.
+
 ---
 
 ## `AssetModule`
@@ -94,7 +130,7 @@ public async mint(to: string, amount: number): Promise<string>
 
 **Errors**
 * Throws a plain `Error` synchronously (via `client.requireSigner()`) if the `AegisClient` was constructed without a `keypair`: `"Transaction signing requires a Keypair to be configured on the AegisClient."`
-* If `sendTransaction` rejects (e.g. the ledger rejects the transaction due to a missing authorization, a non-whitelisted recipient, or a bad sequence number), the error is caught and re-thrown as a new generic `Error` with message `` `Mint transaction failed: ${error}` ``. The original error is interpolated into the message string only — it is not attached as `.cause`, and it is not a `PortfolioError` or other typed error.
+* Account lookup, transaction preparation, and submission each cross `client.runNetworkOperation()`; a rejected network operation is then surfaced through the method's `Mint transaction failed: ...` wrapper.
 
 **Example**
 ```typescript
@@ -116,10 +152,10 @@ try {
 }
 ```
 
-> **Open notes (from the source itself):**
-> * The transaction's source `Account` sequence number is currently hardcoded to `"0"` (`new Account(signer.publicKey(), "0")`). A comment in `src/asset.ts` reads: *"In production, you must fetch the real sequence number for the account."* As written, this will not build a valid transaction against an account with a non-zero sequence number — confirm this has been resolved before using `mint` against a real account.
-> * There is no pre-submission simulation. A `// TODO` in the source notes: *"Implement transaction simulation endpoint before submitting to check for auth/whitelist failures."* Authorization or whitelist failures currently only surface as a submission-time error from `sendTransaction`, not as an upfront check.
-> * The unit/scale of `amount` (e.g. whether it should already account for the asset's `decimals`) is not documented or validated in the source — confirm against the deployed contract's `mint_asset` implementation before use.
+> **Current transaction behavior:**
+> * `mint` fetches the signer's live account sequence from RPC, builds the transaction, runs Soroban RPC `prepareTransaction()`, signs the prepared envelope, and submits it.
+> * The returned hash confirms submission only; the method does not poll for final ledger inclusion.
+> * The unit/scale of `amount` (e.g. whether it should already account for the asset's `decimals`) remains a contract-level integration concern and should be confirmed against the deployed `mint_asset` implementation.
 
 ### `transfer(to: string, amount: number): Promise<string>`
 
