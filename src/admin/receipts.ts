@@ -60,9 +60,10 @@ export function buildAdminActionReceipt<TInput extends AdminActionReceiptInput>(
   validateTarget(input);
 
   const status = normalizeAdminActionStatus(input.status);
-  const transactionHash = input.transactionHash
-    ? normalizeTransactionHashCore(input.transactionHash, adminReceiptError)
-    : null;
+  const transactionHash =
+    input.transactionHash == null
+      ? null
+      : normalizeTransactionHashCore(input.transactionHash, adminReceiptError);
 
   if (status === 'success' && !transactionHash) {
     throw new AdminReceiptError(
