@@ -74,13 +74,15 @@ This matrix reflects the operations actually present on the current main branch.
 
 | Operation | Roles exposed by typed factory | Signer required | SDK-side check | Contract / runtime rejection to expect |
 | --- | --- | --- | --- | --- |
-| `compliance.checkWhitelist(address)` | All roles | No | None beyond configuration/network validation | RPC/simulation failure; unavailable/invalid contract response |
+| `compliance.checkWhitelist(address)` | All roles | No | None beyond configuration/network validation | Thrown RPC/network failures propagate; an unsuccessful simulation response currently collapses to `false` |
 | `investor.getPortfolio(address)` | All roles | No | Read-model validation and safe fallbacks | Compliance or asset read failures may produce an unavailable/partial read model |
 | `events.*` and `role_module.*` reads | All roles | No for read paths | Module-specific validation | RPC/configuration errors; role discovery remains advisory |
 | `asset.transfer(to, amount)` | investor, compliance-operator, issuer, admin | Yes | Typed surface + `requireSigner()` | Contract may reject an unauthorized signer, a non-compliant sender/recipient, invalid asset state, or other contract constraints |
 | `asset.mint(to, amount)` | issuer, admin | Yes | Typed surface + `requireSigner()` | Contract may reject a signer without issuer/admin authority, a disallowed recipient, invalid asset state, or other contract constraints |
 | `assertWhitelistAccess()` | compliance-operator, admin | Client role is signer-capable | Local `canManageWhitelist` check only | No transaction is submitted by the guard itself |
 | `assertAdminAccess()` | admin | Client role is signer-capable | Local `canAdminister` check only | No transaction is submitted by the guard itself |
+
+> **Current simulation caveat:** `ComplianceModule.checkWhitelist()` returns `false` when `simulateTransaction()` returns a non-success response or no result. At this API boundary, `false` therefore currently conflates a confirmed non-whitelisted response with an unsuccessful simulation response. Thrown RPC/network failures remain distinguishable. Applications that must distinguish those cases should not treat `false` alone as definitive authorization evidence.
 
 ## Role-specific guidance
 
@@ -176,7 +178,7 @@ Applications should distinguish the following classes instead of collapsing them
 | `RoleCapabilityError` | A local role-aware guard rejected the operation | Treat as SDK configuration/programming error |
 | `requireSigner()` error | A write path was reached without a configured keypair | Supply the appropriate signer-capable client or keep the path read-only |
 | Contract submission/simulation rejection | The network/contract rejected the signed operation | Treat as authoritative; surface a safe operation-specific failure |
-| RPC/network failure | Authorization may be unknown because the operation could not be evaluated/submitted | Do not reinterpret as permission success or failure |
+| Thrown RPC/network failure | Authorization may be unknown because the operation could not be evaluated/submitted | Do not reinterpret as permission success or failure |
 
 The current `AssetModule` wraps mint and transfer submission errors in operation-specific `Error` messages. Until a contract-specific typed authorization error is available for those paths, consumers should not infer a role from raw text.
 
