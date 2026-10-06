@@ -75,6 +75,25 @@ describe('AssetModule mint readiness', () => {
     expect(result.checks.recipient.code).toBe('RECIPIENT_NOT_WHITELISTED');
   });
 
+  it('reports recipient compliance read failures as typed errors', async () => {
+    const client = makeClient();
+    const recipient = Keypair.random().publicKey();
+    jest
+      .spyOn(client.rpcServer, 'simulateTransaction')
+      .mockResolvedValue({ error: 'simulation failed' } as any);
+
+    const result = await client.asset.checkMintReadiness(
+      recipient,
+      1000,
+      passingProbes(),
+    );
+
+    expect(result.ready).toBe(false);
+    expect(result.checks.recipient.status).toBe('error');
+    expect(result.checks.recipient.code).toBe('RECIPIENT_COMPLIANCE_QUERY_FAILED');
+    expect(result.checks.recipient.verified).toBe(false);
+  });
+
   it('reports invalid amount and unhealthy network as separate blockers', async () => {
     const client = makeClient();
     const recipient = Keypair.random().publicKey();
