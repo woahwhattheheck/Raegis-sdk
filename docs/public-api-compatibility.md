@@ -50,8 +50,8 @@ The SDK currently has these direct or indirect protocol dependencies:
 | SDK behavior | Contract / network dependency | Compatibility consequence |
 | --- | --- | --- |
 | Whitelist reads | `is_whitelisted(address)` | Method name, argument encoding, and boolean result semantics must remain compatible with `ComplianceModule`. |
-| Mint submission | `mint_asset(to, amount)` | Method name, argument encoding, authorization behavior, and amount semantics affect `AssetModule.mint()`. |
-| Transfer submission | `transfer(to, amount)` | Method name, argument encoding, authorization/whitelist behavior, and amount semantics affect `AssetModule.transfer()`. |
+| Mint submission | `mint_asset(signer_public_key, to, amount)` | Method name, argument encoding, authorization behavior, and amount semantics affect `AssetModule.mint()`. |
+| Transfer submission | `transfer(signer_public_key, to, amount)` | Method name, argument encoding, authorization/whitelist behavior, and amount semantics affect `AssetModule.transfer()`. |
 | Portfolio balance reads | `balance(address)` on each configured asset contract | Result encoding and balance units affect `InvestorModule` and dashboard formatting. |
 | Role discovery/capabilities | Indirect `is_whitelisted` plus local signer/capability policy | Adding real contract role queries would change the trust model and requires coordinated SDK/dashboard migration. |
 | Event reads/decoding | Soroban RPC `getEvents` plus Aegis event topics/payloads | Additive unknown topics degrade to the documented `unknown` fallback; typed use requires decoder/type updates. |
