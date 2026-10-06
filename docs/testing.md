@@ -95,3 +95,12 @@ npm run test
 ```
 
 Mock client coverage lives in `tests/mock-client.test.ts` and `tests/mock-client-examples.test.ts`.
+
+
+### Deterministic compliance fixture framework
+
+The test-only `@aegis/sdk/testing` entry point exports `createDeterministicComplianceFixtures()`, `buildMockBooleanSimulationResult()`, and `buildMockI128SimulationResult()`.
+
+The deterministic fixture set provides synthetic admin and investor public addresses, representative RWA metadata, and reusable `approved`, `rejected`, `pending`, `unknown`, `unauthorised`, and `invalid` compliance scenarios. These are test scenarios only; they do not change the production compliance API.
+
+Use the shared account records and response builders in module tests instead of generating one-off identities or repeating XDR response construction. Do not reuse the synthetic fixture addresses for real investor records or funded accounts.
