@@ -38,7 +38,7 @@ describe('portfolio normalizer', () => {
         name: 'Real Asset',
         decimals: 7,
         category: 'real-estate',
-        contractId: 'C_ASSET',
+        contractId: null,
       },
     });
   });
