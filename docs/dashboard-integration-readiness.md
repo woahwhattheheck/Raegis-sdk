@@ -110,14 +110,18 @@ making the entire dashboard unusable. The UI should preserve that distinction.
 
 ### Compliance
 
-`checkWhitelist()` is currently a read query. A `false` result is not the same
-thing as a successfully classified legal/compliance determination.
+`checkWhitelist()` is currently a Boolean read query. A `true` result establishes
+that the protocol query returned a whitelisted result. A `false` result is
+fail-closed but ambiguous: it can mean a negative whitelist result, or that the
+simulation failed or returned no usable result.
 
-Dashboard copy should describe protocol state precisely, for example:
+With only this API result, safe dashboard copy is:
 
-- "address is not currently whitelisted by the protocol";
-- "protocol whitelist status is unavailable";
-- "address is whitelisted by the protocol".
+- `true`: "address is whitelisted by the protocol";
+- `false`: "protocol whitelist approval is not established".
+
+Only show a more specific "not whitelisted" or "status unavailable" state when
+separate error-aware evidence distinguishes those cases.
 
 Avoid copy such as "legally compliant", "approved investment", or "KYC verified
 for all purposes" unless an external system supplies and owns that meaning.
