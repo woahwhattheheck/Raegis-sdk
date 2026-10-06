@@ -1,6 +1,5 @@
-import { nativeToScVal } from '@stellar/stellar-sdk';
+import { nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk';
 import { AegisClient } from './client';
-import { parseSorobanResult } from './utils/xdr-parser';
 
 export class ComplianceModule {
   private client: AegisClient;
@@ -24,7 +23,7 @@ export class ComplianceModule {
 
     return this.client.invocation.read<boolean>(
       call,
-      (retval) => parseSorobanResult(retval as string) as boolean,
+      (retval) => scValToNative(retval as xdr.ScVal) as boolean,
       'is_whitelisted',
     );
   }
