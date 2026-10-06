@@ -36,7 +36,7 @@ reach into `src/` or depend on internal file layout.
 | Dashboard concern | Current SDK seam | Integration note |
 | --- | --- | --- |
 | Client construction | `AegisClient`, role-aware factory functions | Prefer the narrowest client role for the feature |
-| Compliance status | `ComplianceModule.checkWhitelist()` | Boolean read; network/query failure must not be displayed as approval |
+| Compliance status | `ComplianceModule.checkWhitelist()` | Boolean read; `true` establishes whitelist approval, while `false` is fail-closed and ambiguous without separate error-aware evidence |
 | Portfolio | `InvestorModule.getPortfolio()` | Returns a typed read model with `status`, holdings, compliance state, `fetchedAt`, and safe fallback states |
 | UI capability hints | `RoleModule.discoverRole()`, `checkCapability()`, `getCapabilityMatrix()` | Advisory only; `verified` remains false for capability checks |
 | Contract activity | `EventsModule.fetchAndDecode()` | Preserve `latestLedger` and cursor so freshness/pagination are visible |
@@ -284,7 +284,7 @@ Before marking a dashboard integration ready, confirm all applicable items.
 - [ ] Portfolio `active`, `empty`, `blocked`, and `unavailable` states are distinct.
 - [ ] Partial holding failures are not presented as zero-value confirmed data.
 - [ ] Portfolio `fetchedAt` is retained or surfaced.
-- [ ] Compliance query failure is distinct from "not whitelisted".
+- [ ] A bare `checkWhitelist()` false is rendered as approval-not-established; "not whitelisted" versus "unavailable" is shown only with separate error-aware evidence.
 - [ ] Role/capability results are labelled as advisory UI gating.
 
 ### Events and activity
@@ -340,8 +340,8 @@ the dashboard is allowed to submit state-changing transactions.
 Do not call a dashboard integration ready if any of the following are true:
 
 - it embeds a signing secret in browser code;
-- it interprets a failed compliance query as "not whitelisted" without preserving
-  uncertainty;
+- it turns a bare `checkWhitelist()` false into a specific "not whitelisted" or
+  "query unavailable" claim without separate error-aware evidence;
 - it uses SDK role discovery as proof of admin/issuer authority;
 - it treats a successful local capability guard as contract authorization;
 - it maps unknown transaction status to success;
