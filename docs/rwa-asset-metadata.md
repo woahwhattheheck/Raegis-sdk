@@ -1,4 +1,4 @@
-# RWA asset metadata parser
+# Asset metadata parser (portfolio shape)
 
 The SDK exports a runtime parser for asset metadata received from contract,
 indexer, API, or dashboard boundaries. It returns the same `AssetMetadata`
@@ -29,11 +29,11 @@ add fields without breaking older SDK consumers.
 
 ```typescript
 import {
-  parseRwaAssetMetadata,
-  safeParseRwaAssetMetadata,
+  parseAssetMetadata,
+  safeParseAssetMetadata,
 } from '@aegis/sdk';
 
-const metadata = parseRwaAssetMetadata({
+const metadata = parseAssetMetadata({
   symbol: 'AEGIS-RWA',
   name: 'Aegis Tokenized Real Estate',
   decimals: 7,
@@ -41,7 +41,7 @@ const metadata = parseRwaAssetMetadata({
   category: 'Real Estate',
 });
 
-const result = safeParseRwaAssetMetadata(untrustedInput);
+const result = safeParseAssetMetadata(untrustedInput);
 if (!result.success) {
   for (const issue of result.error.issues) {
     console.warn(issue.field, issue.code, issue.message);
@@ -49,9 +49,18 @@ if (!result.success) {
 }
 ```
 
-`parseRwaAssetMetadata` throws `AssetMetadataValidationError` with all detected
-field issues. `safeParseRwaAssetMetadata` returns a discriminated result instead
-of throwing, and `isRwaAssetMetadata` exposes the same rules as a type guard.
+`parseAssetMetadata` throws `AssetMetadataValidationError` with all detected
+field issues. `safeParseAssetMetadata` returns a discriminated result instead
+of throwing, and `isAssetMetadata` exposes the same rules as a type guard.
+
+## Relationship to versioned RWA metadata
+
+This parser targets the SDK's existing `AssetMetadata` portfolio/read-model shape
+(`symbol`, `name`, `decimals`, `isRwa`, plus optional category/contract ID).
+It is intentionally different from a strict versioned off-chain interchange
+schema that may carry issuer, asset identifier, URI, or schema-version fields.
+Use this parser when consuming the existing portfolio metadata model; use the
+versioned validator when consuming that separate contract.
 
 ## Boundary and compliance assumptions
 
