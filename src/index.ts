@@ -48,6 +48,7 @@ export * from './types/role';
 export * from './errors/role';
 export * from './types/admin-receipt';
 export * from './errors/network';
+export * from './errors/config';
 export * from './types/contract-event';
 export * from './errors/event';
 export * from './types/mint-readiness';
