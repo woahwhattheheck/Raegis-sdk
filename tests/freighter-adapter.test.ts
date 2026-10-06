@@ -1,4 +1,10 @@
-import { Keypair, Networks } from '@stellar/stellar-sdk';
+import {
+  Account,
+  Keypair,
+  Networks,
+  Operation,
+  TransactionBuilder,
+} from '@stellar/stellar-sdk';
 import {
   FreighterAdapterError,
   FreighterApiTransport,
@@ -19,6 +25,24 @@ function makeTransport(
     }),
     ...overrides,
   };
+}
+
+function makeUnsignedTransactionXdr(): string {
+  const source = new Account(Keypair.random().publicKey(), '0');
+
+  return new TransactionBuilder(source, {
+    fee: '100',
+    networkPassphrase: Networks.TESTNET,
+  })
+    .addOperation(
+      Operation.manageData({
+        name: 'freighter-adapter-test',
+        value: 'ready',
+      }),
+    )
+    .setTimeout(30)
+    .build()
+    .toXDR();
 }
 
 function expectAdapterError(
@@ -84,6 +108,22 @@ describe('FreighterWalletAdapter', () => {
     await expect(adapter.connect()).resolves.toEqual({ address });
   });
 
+  it('rejects malformed transaction XDR without opening the wallet', async () => {
+    const signTransaction = jest.fn();
+    const adapter = new FreighterWalletAdapter(
+      makeTransport({ signTransaction }),
+    );
+
+    await expectAdapterError(
+      adapter.signTransaction('not-a-transaction-envelope', {
+        networkPassphrase: Networks.TESTNET,
+      }),
+      'INVALID_TRANSACTION_XDR',
+    );
+
+    expect(signTransaction).not.toHaveBeenCalled();
+  });
+
   it('returns a typed rejection when the user refuses a signature', async () => {
     const adapter = new FreighterWalletAdapter(
       makeTransport({
@@ -96,7 +136,7 @@ describe('FreighterWalletAdapter', () => {
     );
 
     await expectAdapterError(
-      adapter.signTransaction('AAAA-unsigned-xdr', {
+      adapter.signTransaction(makeUnsignedTransactionXdr(), {
         networkPassphrase: Networks.TESTNET,
       }),
       'SIGNING_REJECTED',
@@ -116,7 +156,7 @@ describe('FreighterWalletAdapter', () => {
     );
 
     await expectAdapterError(
-      adapter.signTransaction('AAAA-unsigned-xdr', {
+      adapter.signTransaction(makeUnsignedTransactionXdr(), {
         networkPassphrase: Networks.TESTNET,
         address: requestedAddress,
       }),
@@ -133,9 +173,10 @@ describe('FreighterWalletAdapter', () => {
     const adapter = new FreighterWalletAdapter(
       makeTransport({ signTransaction }),
     );
+    const unsignedXdr = makeUnsignedTransactionXdr();
 
     await expect(
-      adapter.signTransaction('AAAA-unsigned-xdr', {
+      adapter.signTransaction(unsignedXdr, {
         networkPassphrase: Networks.TESTNET,
         address,
       }),
@@ -144,7 +185,7 @@ describe('FreighterWalletAdapter', () => {
       signerAddress: address,
     });
 
-    expect(signTransaction).toHaveBeenCalledWith('AAAA-unsigned-xdr', {
+    expect(signTransaction).toHaveBeenCalledWith(unsignedXdr, {
       networkPassphrase: Networks.TESTNET,
       address,
     });
