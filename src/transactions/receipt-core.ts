@@ -105,12 +105,22 @@ function normalizeCustomExplorerBase(
 
   try {
     const parsed = new URL(explorerBaseUrl);
-    if (parsed.protocol !== 'https:') throw new Error('Explorer URL must use HTTPS.');
+    const hasUnsafeComponents =
+      parsed.protocol !== 'https:' ||
+      Boolean(parsed.username) ||
+      Boolean(parsed.password) ||
+      Boolean(parsed.search) ||
+      Boolean(parsed.hash);
+
+    if (hasUnsafeComponents) {
+      throw new Error('Explorer URL must be a plain HTTPS base URL.');
+    }
+
     return parsed.toString().replace(/\/+$/, '');
   } catch {
     throw errorFactory(
       'INVALID_EXPLORER_URL',
-      'Custom explorer base URL must be a valid HTTPS URL.',
+      'Custom explorer base URL must be a plain HTTPS URL without credentials, query, or fragment components.',
     );
   }
 }
