@@ -8,16 +8,18 @@ import {
 describe('secret redaction', () => {
   const stellarSecret = `S${'A'.repeat(55)}`;
   const transactionXdr = `AAAA${'B'.repeat(120)}`;
+  const ed25519Signature = `${'A'.repeat(86)}==`;
 
-  it('redacts secret keys, bearer tokens, and transaction payloads from text', () => {
+  it('redacts secret keys, bearer tokens, signatures, and transaction payloads from text', () => {
     const input =
-      `submit failed secret=${stellarSecret} authorization=Bearer header.payload.sig xdr=${transactionXdr}`;
+      `submit failed ${ed25519Signature} secret=${stellarSecret} authorization=Bearer header.payload.sig xdr=${transactionXdr}`;
     const redacted = redactSensitiveText(input);
 
+    expect(redacted).not.toContain(ed25519Signature);
     expect(redacted).not.toContain(stellarSecret);
     expect(redacted).not.toContain('header.payload.sig');
     expect(redacted).not.toContain(transactionXdr);
-    expect(redacted.match(/\[REDACTED\]/g)?.length).toBeGreaterThanOrEqual(3);
+    expect(redacted.match(/\[REDACTED\]/g)?.length).toBeGreaterThanOrEqual(4);
   });
 
   it('returns a bounded safe copy of nested support data', () => {
