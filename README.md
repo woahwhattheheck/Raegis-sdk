@@ -104,6 +104,8 @@ if (event.kind === 'transfer') {
 
 See [Contract Event Decoder](./docs/contract-events.md) for supported topics, unknown fallback behaviour, and dashboard integration guidance.
 
+See [Transfer Restriction Diagnostics](./docs/transfer-restriction-diagnostics.md) for fail-closed preflight guidance over observable amount, signer, and protocol-whitelist signals.
+
 ## Testing
 To run the SDK unit tests locally:
 
