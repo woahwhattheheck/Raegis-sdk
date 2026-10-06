@@ -56,7 +56,8 @@ export type ComplianceAuditInputErrorCode =
   | 'DUPLICATE_CHECK_CODE'
   | 'DUPLICATE_EVIDENCE_ID'
   | 'UNKNOWN_EVIDENCE_REFERENCE'
-  | 'EVIDENCE_REQUIRED';
+  | 'EVIDENCE_REQUIRED'
+  | 'INVALID_STATUS';
 
 export class ComplianceAuditInputError extends Error {
   public readonly code: ComplianceAuditInputErrorCode;
@@ -91,6 +92,16 @@ function requireIdentifier(value: string, field: string): string {
     );
   }
   return normalized;
+}
+
+function requireStatus(value: ComplianceAuditStatus, field: string): ComplianceAuditStatus {
+  if (!Object.prototype.hasOwnProperty.call(STATUS_RANK, value)) {
+    throw new ComplianceAuditInputError(
+      'INVALID_STATUS',
+      field + ' must be one of pass, warn, fail, unknown'
+    );
+  }
+  return value;
 }
 
 function normalizeEvidence(
@@ -135,6 +146,7 @@ function normalizeFindings(
   return checks
     .map((check, index) => {
       const code = requireIdentifier(check.code, 'checks[' + index + '].code');
+      const status = requireStatus(check.status, code + '.status');
       if (seenCodes.has(code)) {
         throw new ComplianceAuditInputError(
           'DUPLICATE_CHECK_CODE',
@@ -160,17 +172,17 @@ function normalizeFindings(
         }
       }
 
-      if (check.status !== 'unknown' && refs.length === 0) {
+      if (status !== 'unknown' && refs.length === 0) {
         throw new ComplianceAuditInputError(
           'EVIDENCE_REQUIRED',
-          code + ' requires evidence for status ' + check.status
+          code + ' requires evidence for status ' + status
         );
       }
 
       return {
         code,
         summary: check.summary.trim(),
-        status: check.status,
+        status,
         evidenceIds: refs,
       };
     })
