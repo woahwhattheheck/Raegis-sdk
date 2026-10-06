@@ -1,4 +1,4 @@
-import type { AdminActionReceipt, AdminActionStatus } from '../types/admin-receipt';
+import type { AdminActionStatus } from '../types/admin-receipt';
 import type { AegisContractEvent } from '../types/contract-event';
 import type {
   AegisActivity,
@@ -7,6 +7,7 @@ import type {
   AegisActivityKind,
   AegisActivitySource,
   AegisActivityStatus,
+  AdminActionReceiptUnion,
   MapAegisHistoryOptions,
 } from '../types/activity';
 
@@ -176,7 +177,7 @@ function mapContractEvent(
 }
 
 function mapAdminReceipt(
-  receipt: AdminActionReceipt,
+  receipt: AdminActionReceiptUnion,
   position: number,
 ): AegisActivity {
   const status = mapAdminStatus(receipt.status);
@@ -184,7 +185,6 @@ function mapAdminReceipt(
   switch (receipt.operation) {
     case 'whitelist-add':
     case 'whitelist-remove': {
-      const target = receipt.target as { address: string };
       const action =
         receipt.operation === 'whitelist-add'
           ? 'whitelist_add' as const
@@ -202,16 +202,11 @@ function mapAdminReceipt(
           receiptSummary(receipt.operation, status),
         ),
         action,
-        address: target.address,
+        address: receipt.target.address,
       };
     }
 
     case 'asset-mint': {
-      const target = receipt.target as {
-        assetId: string;
-        recipient: string;
-        amount: string;
-      };
       return {
         ...buildBase(
           'admin-receipt',
@@ -224,14 +219,13 @@ function mapAdminReceipt(
           position,
           receiptSummary(receipt.operation, status),
         ),
-        recipient: target.recipient,
-        amount: target.amount,
-        assetId: target.assetId,
+        recipient: receipt.target.recipient,
+        amount: receipt.target.amount,
+        assetId: receipt.target.assetId,
       };
     }
 
     case 'asset-register': {
-      const target = receipt.target as { assetId: string };
       return {
         ...buildBase(
           'admin-receipt',
@@ -245,13 +239,12 @@ function mapAdminReceipt(
           receiptSummary(receipt.operation, status),
         ),
         action: 'asset_register',
-        targetId: target.assetId,
+        targetId: receipt.target.assetId,
       };
     }
 
     case 'protocol-pause':
     case 'protocol-unpause': {
-      const target = receipt.target as { contractId: string };
       return {
         ...buildBase(
           'admin-receipt',
@@ -260,7 +253,7 @@ function mapAdminReceipt(
           receipt.transactionHash,
           receipt.observedAt,
           undefined,
-          target.contractId,
+          receipt.target.contractId,
           position,
           receiptSummary(receipt.operation, status),
         ),
@@ -268,7 +261,7 @@ function mapAdminReceipt(
           receipt.operation === 'protocol-pause'
             ? 'protocol_pause'
             : 'protocol_unpause',
-        targetId: target.contractId,
+        targetId: receipt.target.contractId,
       };
     }
   }
@@ -344,10 +337,10 @@ function adminActionLabel(
 }
 
 function receiptSummary(
-  operation: AdminActionReceipt['operation'],
+  operation: AdminActionReceiptUnion['operation'],
   status: AegisActivityStatus,
 ): string {
-  const operationLabel: Record<AdminActionReceipt['operation'], string> = {
+  const operationLabel: Record<AdminActionReceiptUnion['operation'], string> = {
     'whitelist-add': 'Whitelist addition',
     'whitelist-remove': 'Whitelist removal',
     'asset-register': 'Asset registration',
