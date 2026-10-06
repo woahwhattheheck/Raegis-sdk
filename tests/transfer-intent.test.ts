@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import { Keypair, Networks, StrKey } from '@stellar/stellar-sdk';
+import { Account, Keypair, Networks, StrKey } from '@stellar/stellar-sdk';
 import { AegisClient } from '../src/client';
 import { CompliantTransferIntentError } from '../src/errors/transfer-intent';
 
@@ -153,6 +153,13 @@ describe('compliant transfer intents', () => {
     const check = jest
       .spyOn(client.compliance, 'checkWhitelist')
       .mockResolvedValue(true);
+    const sourceAccount = new Account(client.keypair!.publicKey(), '123');
+    jest
+      .spyOn(client.rpcServer, 'getAccount')
+      .mockResolvedValue(sourceAccount);
+    jest
+      .spyOn(client.rpcServer, 'prepareTransaction')
+      .mockImplementation(async (tx) => tx as any);
     const send = jest
       .spyOn(client.rpcServer, 'sendTransaction')
       .mockResolvedValue({ hash: 'tx-hash' } as any);
