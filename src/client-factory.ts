@@ -82,7 +82,7 @@ function assertCapability(
   flag: keyof Omit<RoleCapabilities, 'role'>,
   operation: string,
 ): void {
-  if (!capabilities[flag]) {
+  if (!Object.prototype.hasOwnProperty.call(capabilities, flag) || capabilities[flag] !== true) {
     throw new RoleCapabilityError(
       `The "${capabilities.role}" client does not permit "${operation}". ` +
         `Required capability: ${flag}.`,
