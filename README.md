@@ -77,6 +77,10 @@ Do not place KYC documents, sanctions evidence, legal notes, or other personal
 data on-chain. The batch payload should contain only addresses and resulting
 protocol status values. Protocol status is not legal or financial advice.
 
+See [Batch Compliance Operations](./docs/batch-compliance.md) for the role
+boundary, mixed-status API, atomicity guarantees, failure semantics, and
+security guidance.
+
 For direct `AegisClient` construction (advanced / custom setups):
 
 ```typescript
