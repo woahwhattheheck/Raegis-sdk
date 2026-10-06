@@ -1,4 +1,4 @@
-import { Keypair, Networks } from '@stellar/stellar-sdk';
+import { Account, Keypair, Networks } from '@stellar/stellar-sdk';
 import {
   ComplianceBatchError,
   ComplianceModule,
@@ -22,6 +22,7 @@ function makeHarness() {
   return {
     module: new ComplianceModule(client),
     rpcServer,
+    signer,
   };
 }
 
@@ -63,6 +64,28 @@ describe('ComplianceModule batch compliance operations', () => {
     });
 
     expect(rpcServer.getAccount).not.toHaveBeenCalled();
+  });
+
+  it('rejects failed RPC submission statuses even when a hash is returned', async () => {
+    const { module, rpcServer, signer } = makeHarness();
+    const user = Keypair.random().publicKey();
+
+    rpcServer.getAccount.mockResolvedValue(
+      new Account(signer.publicKey(), '1'),
+    );
+    rpcServer.prepareTransaction.mockImplementation(
+      async (transaction) => transaction,
+    );
+    rpcServer.sendTransaction.mockResolvedValue({
+      status: 'ERROR',
+      hash: 'rejected-hash',
+      latestLedger: 1,
+      latestLedgerCloseTime: 1,
+    });
+
+    await expect(module.batchWhitelist([user])).rejects.toThrow(
+      'Batch compliance submission was not accepted: ERROR.',
+    );
   });
 
   it('maps whitelist and revocation helpers to explicit lifecycle targets', async () => {
