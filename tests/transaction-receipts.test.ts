@@ -56,8 +56,11 @@ describe('Transaction receipts', () => {
     expect(receipt.explorerUrl).toBeNull();
   });
 
-  it('rejects malformed transaction hashes', () => {
+  it('rejects malformed and explicitly empty transaction hashes', () => {
     expect(() => buildTransactionExplorerUrl('not-a-hash', Networks.TESTNET)).toThrow(
+      expect.objectContaining({ code: 'INVALID_TRANSACTION_HASH' }),
+    );
+    expect(() => buildTransactionExplorerUrl('', Networks.TESTNET)).toThrow(
       expect.objectContaining({ code: 'INVALID_TRANSACTION_HASH' }),
     );
   });
