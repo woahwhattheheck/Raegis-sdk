@@ -5,8 +5,10 @@ import {
   Transaction,
   nativeToScVal,
   rpc,
+  xdr,
 } from '@stellar/stellar-sdk';
 import { SorobanInvocation } from '../src/soroban/invocation';
+import { parseSorobanResult } from '../src/utils/xdr-parser';
 
 jest.mock('@stellar/stellar-sdk', () => {
   const original = jest.requireActual('@stellar/stellar-sdk');
@@ -74,6 +76,23 @@ describe('SorobanInvocation', () => {
     expect(rpcServer.simulateTransaction.mock.calls[0][0]).toBeInstanceOf(
       Transaction,
     );
+  });
+
+  it('decodes parsed ScVal results from successful read simulations', async () => {
+    const { invocation, rpcServer } = makeHarness(false);
+    (rpc.Api.isSimulationSuccess as unknown as jest.Mock).mockReturnValue(true);
+    rpcServer.simulateTransaction.mockResolvedValueOnce({
+      result: { retval: nativeToScVal(true) },
+    });
+
+    const call = invocation.createCall('is_whitelisted');
+    const result = await invocation.read(
+      call,
+      (retval) => parseSorobanResult(retval as xdr.ScVal) as boolean,
+      'is_whitelisted',
+    );
+
+    expect(result).toBe(true);
   });
 
   it('returns a typed simulation failure instead of a false business result', async () => {
