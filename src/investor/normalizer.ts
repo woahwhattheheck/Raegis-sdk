@@ -76,8 +76,7 @@ function metadataFor(
     name: stringFrom(source, nested, ['name', 'assetName', 'asset_name']),
     decimals,
     category: stringFrom(source, nested, ['category', 'assetCategory', 'asset_category']),
-    contractId:
-      stringFrom(source, nested, ['contractId', 'contract_id']) ?? assetId,
+    contractId: stringFrom(source, nested, ['contractId', 'contract_id']),
   };
 }
 
