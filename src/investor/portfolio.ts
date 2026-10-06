@@ -1,4 +1,4 @@
-import { Contract, nativeToScVal, rpc } from '@stellar/stellar-sdk';
+import { Contract, nativeToScVal, rpc, StrKey } from '@stellar/stellar-sdk';
 import { AegisClient } from '../client';
 import {
   InvestorPortfolio,
@@ -11,8 +11,6 @@ import {
 import { InvestorTransferEligibility } from '../types/transfer-eligibility';
 import { PortfolioError } from '../errors/portfolio';
 import { parseSorobanResult } from '../utils/xdr-parser';
-
-const STELLAR_ACCOUNT = /^G[A-Z2-7]{55}$/;
 
 /**
  * Module for querying and processing investor portfolio read models.
@@ -51,10 +49,10 @@ export class InvestorModule {
       observedAt,
     });
 
-    if (typeof source !== 'string' || !STELLAR_ACCOUNT.test(source)) {
+    if (typeof source !== 'string' || !StrKey.isValidEd25519PublicKey(source)) {
       return result('ineligible', 'INVALID_SOURCE_ADDRESS', 'Source must be a Stellar account public key.');
     }
-    if (typeof destination !== 'string' || !STELLAR_ACCOUNT.test(destination)) {
+    if (typeof destination !== 'string' || !StrKey.isValidEd25519PublicKey(destination)) {
       return result('ineligible', 'INVALID_DESTINATION_ADDRESS', 'Destination must be a Stellar account public key.');
     }
     if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
