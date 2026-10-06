@@ -63,6 +63,15 @@ describe('Transaction receipts', () => {
     expect(() => buildTransactionExplorerUrl('', Networks.TESTNET)).toThrow(
       expect.objectContaining({ code: 'INVALID_TRANSACTION_HASH' }),
     );
+    expect(() =>
+      buildTransactionReceipt({
+        operation: 'investor-update',
+        target: { investor: 'GINVESTOR' },
+        status: 'PENDING',
+        transactionHash: '',
+        networkPassphrase: Networks.TESTNET,
+      }),
+    ).toThrow(expect.objectContaining({ code: 'INVALID_TRANSACTION_HASH' }));
   });
 
   it('requires a hash for a successful receipt', () => {
