@@ -1,4 +1,4 @@
-import { StrKey } from '@stellar/stellar-sdk';
+import { StrKey, TransactionBuilder } from '@stellar/stellar-sdk';
 
 export interface FreighterApiErrorLike {
   message?: string;
@@ -183,10 +183,26 @@ export class FreighterWalletAdapter {
     xdr: string,
     options: FreighterSignRequest,
   ): Promise<FreighterSignedTransaction> {
-    if (!xdr.trim()) {
+    const trimmedXdr = xdr.trim();
+
+    if (!trimmedXdr) {
       throw new FreighterAdapterError(
         'INVALID_TRANSACTION_XDR',
         'Transaction XDR must be a non-empty base64 string.',
+      );
+    }
+
+    let normalizedXdr: string;
+
+    try {
+      normalizedXdr = TransactionBuilder.fromXDR(
+        trimmedXdr,
+        options.networkPassphrase,
+      ).toXDR();
+    } catch {
+      throw new FreighterAdapterError(
+        'INVALID_TRANSACTION_XDR',
+        'Transaction XDR must be a valid Stellar transaction envelope.',
       );
     }
 
@@ -197,7 +213,7 @@ export class FreighterWalletAdapter {
     let result: FreighterSignResponse;
 
     try {
-      result = await this.api.signTransaction(xdr, {
+      result = await this.api.signTransaction(normalizedXdr, {
         networkPassphrase: options.networkPassphrase,
         address: requestedAddress,
       });
