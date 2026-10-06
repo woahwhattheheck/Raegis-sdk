@@ -46,7 +46,19 @@ export class SorobanInvocation {
     functionName: string,
     ...args: xdr.ScVal[]
   ): ContractInvocationOperation {
-    return new Contract(this.client.contractId).call(functionName, ...args);
+    return this.createCallFor(this.client.contractId, functionName, ...args);
+  }
+
+  /**
+   * Builds a call against an explicit contract id for modules that aggregate
+   * reads across more than the client's primary contract.
+   */
+  public createCallFor(
+    contractId: string,
+    functionName: string,
+    ...args: xdr.ScVal[]
+  ): ContractInvocationOperation {
+    return new Contract(contractId).call(functionName, ...args);
   }
 
   /**
