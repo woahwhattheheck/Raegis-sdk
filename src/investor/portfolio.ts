@@ -1,4 +1,4 @@
-import { Contract, nativeToScVal, rpc } from '@stellar/stellar-sdk';
+import { Contract, nativeToScVal, rpc, StrKey } from '@stellar/stellar-sdk';
 import { AegisClient } from '../client';
 import {
   InvestorPortfolio,
@@ -8,12 +8,12 @@ import {
   FetchPortfolioOptions,
   TransferEligibility,
 } from '../types/portfolio';
-import { PortfolioError } from '../errors/portfolio';
+import {
+  InvestorTransferEligibility,
+  WhitelistObservation,
+} from '../types/transfer-eligibility';
 import { parseSorobanResult } from '../utils/xdr-parser';
 
-/**
- * Module for querying and processing investor portfolio read models.
- */
 export class InvestorModule {
   private client: AegisClient;
 
@@ -21,13 +21,78 @@ export class InvestorModule {
     this.client = client;
   }
 
-  /**
-   * Fetches the complete portfolio read model for a given investor address.
-   *
-   * @param investorAddress Stellar public key of the investor.
-   * @param options Configuration options for fetching the portfolio.
-   * @returns A promise resolving to the InvestorPortfolio read model.
-   */
+  public async checkTransferEligibility(
+    source: string,
+    destination: string,
+    amount: number,
+  ): Promise<InvestorTransferEligibility> {
+    if (!StrKey.isValidEd25519PublicKey(source)) {
+      return { status: 'ineligible', eligible: false, reasonCode: 'INVALID_SOURCE_ADDRESS' };
+    }
+    if (!StrKey.isValidEd25519PublicKey(destination)) {
+      return { status: 'ineligible', eligible: false, reasonCode: 'INVALID_DESTINATION_ADDRESS' };
+    }
+    if (!Number.isSafeInteger(amount) || amount <= 0) {
+      return { status: 'ineligible', eligible: false, reasonCode: 'INVALID_AMOUNT' };
+    }
+
+    const sourceObservation = await this.client.compliance.observeWhitelist(source);
+    const sourceResult = this.mapWhitelistObservation('SOURCE', sourceObservation);
+    if (sourceResult) {
+      return { ...sourceResult, source: sourceObservation };
+    }
+
+    const destinationObservation =
+      await this.client.compliance.observeWhitelist(destination);
+    const destinationResult = this.mapWhitelistObservation(
+      'DESTINATION',
+      destinationObservation,
+    );
+    if (destinationResult) {
+      return {
+        ...destinationResult,
+        source: sourceObservation,
+        destination: destinationObservation,
+      };
+    }
+
+    return {
+      status: 'eligible',
+      eligible: true,
+      reasonCode: 'ELIGIBLE',
+      source: sourceObservation,
+      destination: destinationObservation,
+    };
+  }
+
+  private mapWhitelistObservation(
+    side: 'SOURCE' | 'DESTINATION',
+    observation: WhitelistObservation,
+  ): Omit<InvestorTransferEligibility, 'source' | 'destination'> | null {
+    switch (observation.status) {
+      case 'approved':
+        return null;
+      case 'not-whitelisted':
+        return {
+          status: 'ineligible',
+          eligible: false,
+          reasonCode: `${side}_NOT_WHITELISTED`,
+        };
+      case 'unknown':
+        return {
+          status: 'unknown',
+          eligible: false,
+          reasonCode: `${side}_COMPLIANCE_UNKNOWN`,
+        };
+      case 'unavailable':
+        return {
+          status: 'unavailable',
+          eligible: false,
+          reasonCode: `${side}_COMPLIANCE_UNAVAILABLE`,
+        };
+    }
+  }
+
   public async getPortfolio(
     investorAddress: string,
     options: FetchPortfolioOptions = {}
@@ -45,7 +110,6 @@ export class InvestorModule {
     let isKycApproved = false;
     let isBlocked = false;
 
-    // 1. Check Compliance / KYC Whitelist status safely
     try {
       isKycApproved = await this.client.compliance.checkWhitelist(investorAddress);
       isBlocked = !isKycApproved;
@@ -58,14 +122,12 @@ export class InvestorModule {
       );
     }
 
-    // 2. Determine asset list to query
     const targetAssetContracts = options.assetContractIds && options.assetContractIds.length > 0
       ? options.assetContractIds
       : [this.client.contractId];
 
     const holdings: AssetHolding[] = [];
 
-    // 3. Query holdings for each asset contract
     for (const contractId of targetAssetContracts) {
       try {
         const holding = await this.fetchAssetHolding(
@@ -77,9 +139,7 @@ export class InvestorModule {
         if (holding) {
           holdings.push(holding);
         }
-      } catch (error) {
-        // If an individual asset query fails, we mark its eligibility as unavailable
-        // while preserving overall portfolio resilience.
+      } catch {
         const fallbackHolding: AssetHolding = {
           assetId: contractId,
           balance: '0',
@@ -102,7 +162,6 @@ export class InvestorModule {
       }
     }
 
-    // 4. Calculate counts & determine portfolio status
     const totalHoldingsCount = holdings.length;
     const compliantHoldingsCount = holdings.filter((h) => h.isCompliant).length;
     const activeHoldings = holdings.filter((h) => BigInt(h.balance) > 0n);
@@ -128,9 +187,6 @@ export class InvestorModule {
     };
   }
 
-  /**
-   * Helper to fetch balance and metadata for a single asset contract.
-   */
   private async fetchAssetHolding(
     contractId: string,
     investorAddress: string,
@@ -195,9 +251,6 @@ export class InvestorModule {
     };
   }
 
-  /**
-   * Helper to fetch asset metadata (symbol, name, decimals, category).
-   */
   private async fetchAssetMetadata(contractId: string): Promise<AssetMetadata> {
     return {
       symbol: 'AEGIS-RWA',
@@ -209,9 +262,6 @@ export class InvestorModule {
     };
   }
 
-  /**
-   * Helper to format raw integer balance string into decimal string representation.
-   */
   private formatBalance(rawBalance: string, decimals: number): string {
     try {
       const bigIntBal = BigInt(rawBalance);
@@ -230,9 +280,6 @@ export class InvestorModule {
     }
   }
 
-  /**
-   * Helper to safely return an 'unavailable' portfolio when RPC or address error occurs.
-   */
   private buildUnavailablePortfolio(
     investorAddress: string,
     errorReason: string,

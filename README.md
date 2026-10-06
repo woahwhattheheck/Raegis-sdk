@@ -73,6 +73,15 @@ const aegis = new AegisClient({
 });
 ```
 
+## Transfer eligibility preflight
+
+Use `aegis.investor.checkTransferEligibility(source, destination, amount)` for
+a read-only, typed source-first whitelist preflight. It does not inspect
+balances or submit transactions.
+
+See [Investor transfer eligibility](./docs/investor-transfer-eligibility.md)
+for status and reason-code semantics.
+
 ## Role Discovery & Capability Checks
 Check what an address is classified as, and what it can currently attempt through the SDK.
 This is a client-side convenience for UI gating, not on-chain authorization — see the
