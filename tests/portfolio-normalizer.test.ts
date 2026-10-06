@@ -6,9 +6,9 @@ import {
 } from '../src/investor/normalizer';
 
 describe('portfolio normalizer', () => {
-  it('normalizes canonical and legacy holding aliases into the same shape', () => {
+  it('normalizes camelCase and snake_case contract ID aliases into the same shape', () => {
     const canonical = normalizePortfolioHolding({
-      assetId: 'C_ASSET',
+      contractId: 'C_ASSET',
       balance: '123450000',
       metadata: {
         symbol: 'RWA',
@@ -38,7 +38,7 @@ describe('portfolio normalizer', () => {
         name: 'Real Asset',
         decimals: 7,
         category: 'real-estate',
-        contractId: null,
+        contractId: 'C_ASSET',
       },
     });
   });
