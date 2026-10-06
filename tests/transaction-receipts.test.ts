@@ -103,4 +103,20 @@ describe('Transaction receipts', () => {
       }),
     ).toThrow(TransactionReceiptError);
   });
+
+  it('rejects ambiguous HTTPS custom explorer bases', () => {
+    for (const explorerBaseUrl of [
+      'https://user:pass@explorer.example/transactions',
+      'https://explorer.example/transactions?network=private',
+      'https://explorer.example/transactions#tx',
+    ]) {
+      expect(() =>
+        buildTransactionExplorerUrl(
+          HASH,
+          'Private Aegis Network',
+          explorerBaseUrl,
+        ),
+      ).toThrow(expect.objectContaining({ code: 'INVALID_EXPLORER_URL' }));
+    }
+  });
 });
