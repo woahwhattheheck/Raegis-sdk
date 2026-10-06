@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@aegis/sdk": ["./dist/index.d.ts"],
+      "@aegis/sdk/testing": ["./dist/testing/index.d.ts"]
+    }
+  },
+  "include": ["tests/public-api-consumer.ts"],
+  "exclude": ["node_modules"]
+}
