@@ -9,7 +9,7 @@ This guide defines the boundary between what the SDK and Aegis contract can esta
 | Surface | What it can establish | What it cannot establish |
 | --- | --- | --- |
 | Aegis Soroban contract | Whether a submitted operation satisfies the contract's current rules and state at execution time | Whether an action is lawful in a jurisdiction, whether a person has completed an off-chain compliance process, or whether an investment is suitable |
-| `ComplianceModule.checkWhitelist(address)` | The contract's current `is_whitelisted` result when the RPC simulation succeeds | The reason an address is or is not whitelisted; identity verification status outside the protocol; legal clearance |
+| `ComplianceModule.checkWhitelist(address)` | `true` when a successful simulation returns a positive whitelist result; otherwise the current Boolean helper returns `false` | Whether `false` came from an explicit negative contract result versus an unsuccessful/missing-result simulation; the reason for a negative result; identity verification status outside the protocol; legal clearance |
 | `RoleModule` | A client-side classification derived from whitelist state plus local signer configuration | Contract-side admin/issuer authority, legal status, or a guaranteed transaction outcome |
 | Role-aware client factories | The capability intent declared by the caller and the local signer surface exposed by the SDK | Proof that the signer has an on-chain role or that the contract will authorize the requested operation |
 | Contract-event decoder | A typed interpretation of known protocol event topics, with an `unknown` fallback | Legal/compliance conclusions, transaction signature verification, or off-chain authorization |
@@ -26,9 +26,9 @@ Applications should preserve the distinction between positive, negative, and ind
 | Observed state | Safe interpretation | Do not present it as |
 | --- | --- | --- |
 | Whitelist query returns `true` | "Protocol whitelist active" or "Address is whitelisted by the contract" | "KYC legally complete", "regulator approved", or "safe to invest" |
-| Whitelist query returns `false` | "Protocol whitelist inactive" | A reason for rejection, a sanctions result, or a legal determination |
+| Whitelist helper returns `false` | "Protocol whitelist approval is not established" | A confirmed "not whitelisted" result unless separate error-aware evidence distinguishes an explicit contract negative from a query/simulation failure; a reason for rejection; a sanctions result; or a legal determination |
 | Role discovery returns `investor` | The address is currently whitelisted under the SDK's client-side model | A contract-side admin/issuer role or verified investor eligibility under law |
-| Role discovery returns `unauthorized` | The address is not currently whitelisted | A statement about identity, fraud, sanctions, or legal disqualification |
+| Role discovery returns `unauthorized` | The current helper path did not establish whitelist approval. Today this includes both an explicit `false` and some fail-closed simulation failures. | Proof that the contract explicitly returned `false`, or any statement about identity, fraud, sanctions, or legal disqualification |
 | Role discovery returns `unknown` | The SDK cannot determine the state from current evidence | Approved, denied, or "probably approved" |
 | A local signer is present | The SDK has signing material for the address | Proof of an on-chain role or permission |
 | A role-aware client is created as `admin`, `issuer`, or `compliance-operator` | The caller selected that local capability surface | Proof that the contract recognizes the signer in that role |
@@ -58,7 +58,7 @@ The SDK provides typed access to contract/RPC evidence and local capability guar
 
 In particular:
 
-- `ComplianceModule.checkWhitelist()` reports protocol whitelist state.
+- `ComplianceModule.checkWhitelist()` is a fail-closed Boolean helper: `true` is positive whitelist evidence, while `false` currently does not distinguish an explicit negative contract result from an unsuccessful or missing-result simulation.
 - `RoleModule` is a developer-experience and dashboard-gating helper. Its capability results are deliberately not contract-verified; callers must still handle contract rejection.
 - Role-aware factories prevent accidental use of operations outside the caller's declared SDK role, but the declared role is not proof of an on-chain role.
 - Event decoding must retain the `unknown` fallback for unsupported or malformed events.
@@ -72,7 +72,7 @@ A dashboard may use SDK evidence to decide which controls to show, what warnings
 
 1. label protocol state explicitly, for example **Protocol whitelist active** rather than **KYC approved**;
 2. distinguish local signer/capability state from contract authorization;
-3. preserve `unknown`, `pending`, and unavailable states instead of converting them to a binary approved/denied result;
+3. preserve `unknown`, `pending`, unavailable, and approval-not-established states instead of converting them to a binary approved/denied result;
 4. handle contract rejection even when a prior client-side capability check was positive;
 5. show the evidence timestamp or refresh state when stale data could change the user's decision; and
 6. route legal or policy determinations to the organization's off-chain process.
@@ -81,7 +81,7 @@ A dashboard may use SDK evidence to decide which controls to show, what warnings
 
 ### RPC or network failure
 
-A failed whitelist query, unavailable RPC endpoint, or incomplete network response is an evidence failure. The application should show an unavailable/unknown state and allow an appropriate retry. It must not assume the last positive state still applies unless the product has an explicit, documented freshness policy.
+A failed whitelist query, unavailable RPC endpoint, or incomplete network response is an evidence failure. The current `checkWhitelist()` helper returns `false` for some unsuccessful or missing-result simulations, so a direct Boolean caller cannot always distinguish that evidence failure from an explicit negative contract result. Treat `false` as approval not established. Show a distinct unavailable/unknown state only when a separate error-aware layer has evidence for that failure, and allow an appropriate retry. Never assume the last positive state still applies unless the product has an explicit, documented freshness policy.
 
 ### Stale indexer or event data
 
@@ -108,7 +108,7 @@ Never place secret keys, seeds, raw signing material, credentials embedded in RP
 Prefer wording that names the evidence:
 
 - "Protocol whitelist active"
-- "Protocol whitelist inactive"
+- "Protocol whitelist approval not established"
 - "Compliance status unavailable"
 - "Signer configured locally"
 - "Transaction confirmed"
@@ -131,6 +131,7 @@ For changes that touch compliance, roles, events, receipts, admin flows, or dash
 - [ ] Protocol state is described as protocol state, not legal or regulatory status.
 - [ ] Client-side role/capability predictions are not described as on-chain authorization.
 - [ ] Local signer presence is not treated as proof of an admin/issuer/compliance role.
+- [ ] A `false` whitelist helper result is treated as approval not established unless separate error-aware evidence distinguishes an explicit negative from a query/simulation failure.
 - [ ] `unknown`, unavailable, pending, malformed, and unsupported states remain explicit.
 - [ ] Contract rejection is handled even after a positive client-side prediction.
 - [ ] Event and receipt documentation does not overstate transaction or legal finality.
