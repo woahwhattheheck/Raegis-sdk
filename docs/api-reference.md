@@ -45,8 +45,8 @@ public async checkWhitelist(address: string): Promise<boolean>
 `Promise<boolean>` — `true` if the simulated call to `is_whitelisted` succeeds and decodes to `true`. Resolves to `false` both when the contract reports the address is not whitelisted, *and* when the simulation does not succeed or returns no result — the current implementation does not distinguish those two cases in its return value.
 
 **Errors**
-* If `simulateTransaction` itself throws (network failure, malformed request, etc.), the error is logged via `console.error` and then re-thrown as-is. It is the raw error from the underlying `@stellar/stellar-sdk` RPC call — `checkWhitelist` does not wrap it in `PortfolioError` or any other typed error.
-* A failed/unsuccessful simulation that does *not* throw is swallowed and reported as `false` (see Returns above), not as an error.
+* If `simulateTransaction` throws, the call crosses `client.runNetworkOperation()` and rejects with the SDK's classified network failure rather than exposing the raw RPC payload.
+* A failed/unsuccessful simulation that does *not* throw is reported as `false` (see Returns above), not as an error.
 
 **Example**
 ```typescript
@@ -159,7 +159,7 @@ try {
 
 ### `transfer(to: string, amount: number): Promise<string>`
 
-Transfers RWA tokens to another address by calling the contract's `transfer` function. Built the same way as `mint` (manual `TransactionBuilder`, hardcoded source sequence number, no pre-submission simulation).
+Transfers RWA tokens to another address by calling the contract's `transfer` function. Unlike the repaired `mint` path above, the current transfer implementation still builds from a hardcoded source sequence and submits without `prepareTransaction()`.
 
 **Signature**
 ```typescript
@@ -187,7 +187,7 @@ try {
 }
 ```
 
-> **Open note:** the same hardcoded sequence-number-`"0"` caveat described under `mint` applies here, since `transfer` builds its transaction the same way.
+> **Open note:** `transfer` still constructs its source account with sequence `"0"`; this caveat now applies to `transfer` only, since `mint` fetches the live account sequence and prepares the transaction before signing.
 
 ---
 
