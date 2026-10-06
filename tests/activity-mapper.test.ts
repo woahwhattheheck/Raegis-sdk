@@ -25,7 +25,8 @@ function transferEvent(overrides: Partial<AegisContractEvent> = {}): AegisContra
   } as AegisContractEvent;
 }
 
-const INVALID_ADMIN_TARGET = {
+// @ts-expect-error whitelist operations require an address target.
+const invalidAdminActivityInput: AegisActivityInput = {
   operation: 'whitelist-add',
   target: { assetId: 'not-an-address' },
   status: 'pending',
@@ -34,8 +35,6 @@ const INVALID_ADMIN_TARGET = {
   observedAt: '2026-10-05T20:00:00.000Z',
   summary: 'invalid',
 };
-// @ts-expect-error whitelist operations require an address target.
-const invalidAdminActivityInput: AegisActivityInput = INVALID_ADMIN_TARGET;
 void invalidAdminActivityInput;
 
 describe('Aegis activity mapper', () => {
