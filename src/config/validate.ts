@@ -139,6 +139,17 @@ export function resolveClientConfig(config: AegisClientConfig): ResolvedAegisCon
     }
     if (config.networkPassphrase) {
       validateNetworkPassphrase(config.networkPassphrase);
+
+      const usesNamedRegistry =
+        config.contractId === undefined &&
+        config.contractRegistry !== undefined &&
+        config.contractName !== undefined;
+      if (usesNamedRegistry && config.networkPassphrase !== preset.networkPassphrase) {
+        throw new ConfigValidationError(
+          `Invalid networkPassphrase: registry selection for environment "${config.environment}" must use that environment's preset passphrase.`,
+          'INVALID_NETWORK_PASSPHRASE'
+        );
+      }
     }
 
     rpcUrl = config.rpcUrl ?? preset.rpcUrl;
