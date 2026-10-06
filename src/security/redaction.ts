@@ -14,6 +14,7 @@ const STELLAR_SECRET_PATTERN = /\bS[A-Z2-7]{55}\b/g;
 const BEARER_TOKEN_PATTERN = /\bBearer\s+[A-Za-z0-9._~+\/-]+=*/gi;
 const SENSITIVE_ASSIGNMENT_PATTERN =
   /\b(authorization|cookie|credential|keypair|password|private[_-]?key|secret(?:[_-]?key)?|seed|signature|token|transaction(?:[_-]?(?:xdr|payload))?|xdr)\b(\s*[:=]\s*)(?:"[^"]*"|'[^']*'|Bearer\s+[A-Za-z0-9._~+\/-]+=*|[^\s,;}\]]+)/gi;
+const ED25519_SIGNATURE_BASE64_PATTERN = /(?<![A-Za-z0-9+/])[A-Za-z0-9+/]{86}==(?=$|[^A-Za-z0-9+/=])/g;
 const LONG_BASE64_PATTERN = /\b[A-Za-z0-9+/]{96,}={0,2}/g;
 const LONG_HEX_PATTERN = /\b[0-9a-fA-F]{128,}\b/g;
 const MAX_DEPTH = 6;
@@ -30,6 +31,7 @@ export function redactSensitiveText(value: string): string {
       return `${key}${separator}${REDACTED_VALUE}`;
     })
     .replace(BEARER_TOKEN_PATTERN, `Bearer ${REDACTED_VALUE}`)
+    .replace(ED25519_SIGNATURE_BASE64_PATTERN, REDACTED_VALUE)
     .replace(LONG_BASE64_PATTERN, REDACTED_VALUE)
     .replace(LONG_HEX_PATTERN, REDACTED_VALUE);
 }
