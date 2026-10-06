@@ -1,4 +1,4 @@
-import { nativeToScVal } from '@stellar/stellar-sdk';
+import { nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk';
 import { AegisClient } from '../client';
 import {
   InvestorPortfolio,
@@ -9,7 +9,6 @@ import {
   TransferEligibility,
 } from '../types/portfolio';
 import { PortfolioError } from '../errors/portfolio';
-import { parseSorobanResult } from '../utils/xdr-parser';
 
 /**
  * Module for querying and processing investor portfolio read models.
@@ -148,7 +147,7 @@ export class InvestorModule {
     try {
       const parsed = await this.client.invocation.read<unknown>(
         call,
-        (retval) => parseSorobanResult(retval as string),
+        (retval) => scValToNative(retval as xdr.ScVal),
         'balance',
       );
       balanceRaw = parsed !== null && parsed !== undefined ? String(parsed) : '0';
