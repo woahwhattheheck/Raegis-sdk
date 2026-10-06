@@ -1,4 +1,4 @@
-import { Contract, nativeToScVal, rpc, TransactionBuilder, Account } from '@stellar/stellar-sdk';
+import { Contract, nativeToScVal, rpc, TransactionBuilder } from '@stellar/stellar-sdk';
 import { AegisClient } from './client';
 import { parseSorobanResult } from './utils/xdr-parser';
 
@@ -38,7 +38,9 @@ constructor(client: AegisClient) {
       nativeToScVal(address, { type: 'address' })
     );
 
-    const sourceAccount = new Account(signer.publicKey(), "0");
+    const sourceAccount = await this.client.runNetworkOperation(() =>
+      this.client.rpcServer.getAccount(signer.publicKey())
+    );
     const tx = new TransactionBuilder(sourceAccount, {
       fee: "1000",
       networkPassphrase: this.client.networkPassphrase,
@@ -47,9 +49,13 @@ constructor(client: AegisClient) {
       .setTimeout(30)
       .build();
 
-    tx.sign(signer);
+    const prepared = await this.client.runNetworkOperation(() =>
+      this.client.rpcServer.prepareTransaction(tx)
+    );
+    prepared.sign(signer);
+
     const response = await this.client.runNetworkOperation(() =>
-      this.client.rpcServer.sendTransaction(tx)
+      this.client.rpcServer.sendTransaction(prepared)
     );
     return response.hash;
   }
