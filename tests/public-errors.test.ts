@@ -60,22 +60,48 @@ describe('public SDK error taxonomy', () => {
       contractId: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4',
       keypair: Keypair.random(),
     });
-    jest
-      .spyOn(client.rpcServer, 'simulateTransaction')
-      .mockResolvedValue({ error: 'raw-provider-detail-should-not-leak' } as any);
+    const simulateTransaction = jest.spyOn(
+      client.rpcServer,
+      'simulateTransaction',
+    );
 
-    const error = await client.compliance
+    simulateTransaction.mockRejectedValueOnce(
+      new Error('raw-provider-detail-should-not-leak'),
+    );
+
+    const rpcFailure = await client.compliance
       .checkWhitelist(Keypair.random().publicKey())
       .catch((caught) => caught);
 
-    expect(error).toBeInstanceOf(AegisSdkError);
-    expect(error).toMatchObject({
+    expect(rpcFailure).toBeInstanceOf(AegisSdkError);
+    expect(rpcFailure).toMatchObject({
       code: 'COMPLIANCE_QUERY_FAILED',
       category: 'compliance',
       message: 'The compliance status query failed.',
       metadata: { operation: 'checkWhitelist' },
     });
-    expect(JSON.stringify(error)).not.toContain('raw-provider-detail-should-not-leak');
+    expect(JSON.stringify(rpcFailure)).not.toContain(
+      'raw-provider-detail-should-not-leak',
+    );
+
+    simulateTransaction.mockResolvedValueOnce({
+      error: 'raw-simulation-detail-should-not-leak',
+    } as any);
+
+    const unsuccessfulSimulation = await client.compliance
+      .checkWhitelist(Keypair.random().publicKey())
+      .catch((caught) => caught);
+
+    expect(unsuccessfulSimulation).toBeInstanceOf(AegisSdkError);
+    expect(unsuccessfulSimulation).toMatchObject({
+      code: 'COMPLIANCE_QUERY_FAILED',
+      category: 'compliance',
+      message: 'The compliance status query failed.',
+      metadata: { operation: 'checkWhitelist' },
+    });
+    expect(JSON.stringify(unsuccessfulSimulation)).not.toContain(
+      'raw-simulation-detail-should-not-leak',
+    );
   });
 
   it('preserves the common category surface across existing domain errors', () => {
