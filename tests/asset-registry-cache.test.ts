@@ -1,6 +1,7 @@
 import {
   AssetRegistryCacheEntry,
   AssetRegistryCacheScope,
+  InMemoryAssetRegistryCache,
   isAssetRegistryCacheEntryFresh,
   isSameAssetRegistryCacheScope,
 } from '../src';
@@ -67,5 +68,23 @@ describe('asset registry cache policy', () => {
         networkPassphrase: 'network-b',
       })
     ).toBe(false);
+  });
+
+  test('in-memory adapter expires entries and invalidates only the requested scope', () => {
+    const cache = new InMemoryAssetRegistryCache<string>();
+    const otherScope = { ...scope, assetId: 'asset-b' };
+
+    cache.setWithTtl(scope, 'active', 100, 1000);
+    expect(cache.getFresh(scope, 1099)?.value).toBe('active');
+    expect(cache.getFresh(scope, 1100)).toBeUndefined();
+
+    cache.setWithTtl(scope, 'active', 100, 2000);
+    cache.setWithTtl(otherScope, 'other', 100, 2000);
+    cache.delete(scope);
+    expect(cache.getFresh(scope, 2050)).toBeUndefined();
+    expect(cache.getFresh(otherScope, 2050)?.value).toBe('other');
+
+    cache.clear();
+    expect(cache.getFresh(otherScope, 2050)).toBeUndefined();
   });
 });
