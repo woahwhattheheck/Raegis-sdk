@@ -102,6 +102,20 @@ describe('Admin action receipts', () => {
 
     expect(() =>
       buildAdminActionReceipt({
+        operation: 'asset-register',
+        target: { assetId: 'USDC:GISSUER' },
+        status: 'PENDING',
+        transactionHash: '',
+        networkPassphrase: Networks.TESTNET,
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        code: 'INVALID_TRANSACTION_HASH',
+      }),
+    );
+
+    expect(() =>
+      buildAdminActionReceipt({
         operation: 'protocol-unpause',
         target: { contractId: 'CAEGIS' },
         status: 'SUCCESS',
