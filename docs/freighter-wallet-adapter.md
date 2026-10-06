@@ -53,7 +53,7 @@ The application remains responsible for obtaining the unsigned XDR from the inte
 | `ACCESS_REJECTED` | The user rejected/cancelled the account-access request. |
 | `ACCESS_FAILED` | Account access failed for another reason. |
 | `INVALID_ADDRESS` | The wallet or caller supplied an invalid Stellar account address. |
-| `INVALID_TRANSACTION_XDR` | The caller supplied an empty transaction payload. |
+| `INVALID_TRANSACTION_XDR` | The caller supplied empty or malformed transaction-envelope XDR; it is rejected before any wallet signing request. |
 | `SIGNING_REJECTED` | The user rejected/cancelled the signature request. |
 | `SIGNING_FAILED` | Signing failed or returned an empty signed transaction. |
 | `SIGNER_MISMATCH` | The wallet signed with an account other than the explicitly requested account. |
