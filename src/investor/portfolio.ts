@@ -8,8 +8,11 @@ import {
   FetchPortfolioOptions,
   TransferEligibility,
 } from '../types/portfolio';
+import { InvestorTransferEligibility } from '../types/transfer-eligibility';
 import { PortfolioError } from '../errors/portfolio';
 import { parseSorobanResult } from '../utils/xdr-parser';
+
+const STELLAR_ACCOUNT = /^G[A-Z2-7]{55}$/;
 
 /**
  * Module for querying and processing investor portfolio read models.
@@ -19,6 +22,68 @@ export class InvestorModule {
 
   constructor(client: AegisClient) {
     this.client = client;
+  }
+
+  /**
+   * Performs a read-only protocol whitelist preflight for a proposed investor transfer.
+   *
+   * This does not check balances, sign, simulate, or submit a transfer. Contract
+   * authorization remains authoritative.
+   */
+  public async checkTransferEligibility(
+    source: string,
+    destination: string,
+    amount: number,
+  ): Promise<InvestorTransferEligibility> {
+    const observedAt = new Date().toISOString();
+    const result = (
+      state: InvestorTransferEligibility['state'],
+      code: InvestorTransferEligibility['code'],
+      reason?: string,
+    ): InvestorTransferEligibility => ({
+      source,
+      destination,
+      amount,
+      state,
+      isEligible: state === 'eligible',
+      code,
+      reason,
+      observedAt,
+    });
+
+    if (typeof source !== 'string' || !STELLAR_ACCOUNT.test(source)) {
+      return result('ineligible', 'INVALID_SOURCE_ADDRESS', 'Source must be a Stellar account public key.');
+    }
+    if (typeof destination !== 'string' || !STELLAR_ACCOUNT.test(destination)) {
+      return result('ineligible', 'INVALID_DESTINATION_ADDRESS', 'Destination must be a Stellar account public key.');
+    }
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+      return result('ineligible', 'INVALID_AMOUNT', 'Amount must be a positive finite number.');
+    }
+
+    const sourceStatus = await this.client.compliance.observeWhitelist(source);
+    if (sourceStatus.state === 'not_approved') {
+      return result('ineligible', 'SOURCE_NOT_WHITELISTED', 'Source is not whitelisted by the protocol.');
+    }
+    if (sourceStatus.state === 'unknown') {
+      return result('unknown', 'SOURCE_STATUS_UNKNOWN', 'Source whitelist status could not be determined.');
+    }
+    if (sourceStatus.state === 'unavailable') {
+      return result('unavailable', 'SOURCE_QUERY_FAILED', 'Source whitelist query was unavailable.');
+    }
+
+    const destinationStatus = await this.client.compliance.observeWhitelist(destination);
+    if (destinationStatus.state === 'not_approved') {
+      return result('ineligible', 'DESTINATION_NOT_WHITELISTED', 'Destination is not whitelisted by the protocol.');
+    }
+    if (destinationStatus.state === 'unknown') {
+      return result('unknown', 'DESTINATION_STATUS_UNKNOWN', 'Destination whitelist status could not be determined.');
+    }
+    if (destinationStatus.state === 'unavailable') {
+      return result('unavailable', 'DESTINATION_QUERY_FAILED', 'Destination whitelist query was unavailable.');
+    }
+
+    return result('eligible', 'ELIGIBLE');
   }
 
   /**
