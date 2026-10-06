@@ -1,6 +1,6 @@
 import { Contract, nativeToScVal, rpc } from '@stellar/stellar-sdk';
 import { AegisClient } from './client';
-import { normalizeAegisSdkError } from './errors/public';
+import { AegisSdkError } from './errors/public';
 import { parseSorobanResult } from './utils/xdr-parser';
 
 export class ComplianceModule {
@@ -30,16 +30,30 @@ constructor(client: AegisClient) {
       );
 
       if (!rpc.Api.isSimulationSuccess(result) || !result.result) {
-        throw new Error('Compliance simulation failed to return a result.');
+        throw new AegisSdkError({
+          code: 'COMPLIANCE_QUERY_FAILED',
+          category: 'compliance',
+          message: 'The compliance status query failed.',
+          metadata: { operation: 'checkWhitelist' },
+        });
       }
 
       return parseSorobanResult(result.result.retval as any) as boolean;
     } catch (error) {
-      throw normalizeAegisSdkError(error, {
+      if (
+        error instanceof AegisSdkError &&
+        error.category === 'compliance' &&
+        error.code === 'COMPLIANCE_QUERY_FAILED'
+      ) {
+        throw error;
+      }
+
+      throw new AegisSdkError({
         code: 'COMPLIANCE_QUERY_FAILED',
         category: 'compliance',
         message: 'The compliance status query failed.',
         metadata: { operation: 'checkWhitelist' },
+        cause: error,
       });
     }
   }
