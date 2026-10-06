@@ -19,9 +19,9 @@ export * from './errors/client-factory';
 export { ComplianceModule } from './compliance';
 export { AssetModule } from './asset';
 export {
-  parseRwaAssetMetadata,
-  safeParseRwaAssetMetadata,
-  isRwaAssetMetadata,
+  parseAssetMetadata,
+  safeParseAssetMetadata,
+  isAssetMetadata,
 } from './asset-metadata';
 export type { SafeAssetMetadataParseResult } from './asset-metadata';
 export * from './errors/asset-metadata';
