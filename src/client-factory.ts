@@ -17,8 +17,11 @@ import { RoleModule } from './role';
 // Capability matrix
 // ---------------------------------------------------------------------------
 
-const ROLE_CAPABILITIES: Readonly<Record<ClientRole, RoleCapabilities>> = {
-  'read-only': {
+const freezeCapabilities = (capabilities: RoleCapabilities): RoleCapabilities =>
+  Object.freeze(capabilities);
+
+const ROLE_CAPABILITIES: Readonly<Record<ClientRole, RoleCapabilities>> = Object.freeze({
+  'read-only': freezeCapabilities({
     role: 'read-only',
     canRead: true,
     canSign: false,
@@ -26,8 +29,8 @@ const ROLE_CAPABILITIES: Readonly<Record<ClientRole, RoleCapabilities>> = {
     canMint: false,
     canManageWhitelist: false,
     canAdminister: false,
-  },
-  investor: {
+  }),
+  investor: freezeCapabilities({
     role: 'investor',
     canRead: true,
     canSign: true,
@@ -35,8 +38,8 @@ const ROLE_CAPABILITIES: Readonly<Record<ClientRole, RoleCapabilities>> = {
     canMint: false,
     canManageWhitelist: false,
     canAdminister: false,
-  },
-  'compliance-operator': {
+  }),
+  'compliance-operator': freezeCapabilities({
     role: 'compliance-operator',
     canRead: true,
     canSign: true,
@@ -44,8 +47,8 @@ const ROLE_CAPABILITIES: Readonly<Record<ClientRole, RoleCapabilities>> = {
     canMint: false,
     canManageWhitelist: true,
     canAdminister: false,
-  },
-  issuer: {
+  }),
+  issuer: freezeCapabilities({
     role: 'issuer',
     canRead: true,
     canSign: true,
@@ -53,8 +56,8 @@ const ROLE_CAPABILITIES: Readonly<Record<ClientRole, RoleCapabilities>> = {
     canMint: true,
     canManageWhitelist: false,
     canAdminister: false,
-  },
-  admin: {
+  }),
+  admin: freezeCapabilities({
     role: 'admin',
     canRead: true,
     canSign: true,
@@ -62,8 +65,9 @@ const ROLE_CAPABILITIES: Readonly<Record<ClientRole, RoleCapabilities>> = {
     canMint: true,
     canManageWhitelist: true,
     canAdminister: true,
-  },
-};
+  }),
+});
+
 
 // ---------------------------------------------------------------------------
 // Guard helper
