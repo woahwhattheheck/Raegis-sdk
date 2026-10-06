@@ -360,6 +360,16 @@ describe('capability guards throw RoleCapabilityError for unsupported operations
     }
   });
 
+  it('does not allow consumers to mutate shared capability flags', () => {
+    const aegis = createInvestorClient({ ...BASE_CONFIG, keypair: makeKeypair() });
+
+    expect(Reflect.set(aegis.capabilities as object, 'canMint', true)).toBe(false);
+    expect(aegis.capabilities.canMint).toBe(false);
+    expect(() => aegis.assertCapability('canMint', 'mint')).toThrow(
+      RoleCapabilityError,
+    );
+  });
+
   it('runtime guard allows capabilities granted to the declared role', () => {
     const admin = createAdminClient({ ...BASE_CONFIG, keypair: makeKeypair() });
     expect(() =>
