@@ -7,7 +7,6 @@ import {
   rpc,
 } from '@stellar/stellar-sdk';
 import { SorobanInvocation } from '../src/soroban/invocation';
-import { SorobanInvocationError } from '../src/errors/invocation';
 
 jest.mock('@stellar/stellar-sdk', () => {
   const original = jest.requireActual('@stellar/stellar-sdk');
@@ -158,13 +157,6 @@ describe('SorobanInvocation', () => {
     const writeCall = writeHarness.invocation.createCall('transfer');
     await expect(
       writeHarness.invocation.write(writeCall, 'transfer'),
-    ).rejects.toBeInstanceOf(SorobanInvocationError);
-    await expect(
-      Promise.reject(
-        new SorobanInvocationError('x', 'SUBMISSION_FAILED', {
-          operation: 'transfer',
-        }),
-      ),
     ).rejects.toMatchObject({
       code: 'SUBMISSION_FAILED',
       operation: 'transfer',
