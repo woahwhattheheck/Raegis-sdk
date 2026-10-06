@@ -62,8 +62,11 @@ The SDK performs deterministic preflight checks before RPC work:
 `batchRevoke()` maps every address to the strict `Revoked` lifecycle target.
 For mixed lifecycle updates, use `batchSetComplianceStatus()`.
 
-A returned transaction hash means the RPC submission was accepted; callers
-that require ledger finality should confirm the transaction through their
+The SDK treats only RPC `PENDING` and `DUPLICATE` submission statuses as
+accepted. It rejects `ERROR` and `TRY_AGAIN_LATER` even though Soroban RPC
+also returns a transaction hash for those statuses. A hash returned by these
+helpers therefore represents an accepted submission, not ledger finality;
+callers that require finality should confirm the transaction through their
 normal receipt/finality workflow.
 
 ## Security and compliance notes
