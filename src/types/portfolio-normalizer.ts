@@ -93,6 +93,7 @@ export interface PortfolioHoldingInput {
   unsupported?: unknown;
   status?: unknown;
   metadata?: unknown;
+  asset?: unknown;
 }
 
 /** Optional compatibility assumptions for normalization. */
