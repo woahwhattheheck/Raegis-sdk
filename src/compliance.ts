@@ -117,6 +117,14 @@ export class ComplianceModule {
       prepared.sign(signer);
 
       const response = await this.client.rpcServer.sendTransaction(prepared);
+      if (
+        response.status !== 'PENDING' &&
+        response.status !== 'DUPLICATE'
+      ) {
+        throw new Error(
+          `Batch compliance submission was not accepted: ${response.status}.`,
+        );
+      }
       if (!response.hash) {
         throw new Error(
           'Batch compliance submission returned no transaction hash.',
