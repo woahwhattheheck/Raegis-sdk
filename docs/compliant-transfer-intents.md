@@ -14,9 +14,14 @@ compliance query. It checks the configured signer first and the recipient
 second. A rejected sender short-circuits the recipient check, and an unavailable
 compliance query fails closed.
 
-Before submission, the SDK rechecks that the current signer, contract ID, and
-network passphrase still match the checked intent. If they changed, submission
-stops with `INTENT_CONFIG_MISMATCH`.
+Before explicit intent submission, the SDK rechecks sender and recipient
+compliance. It then rechecks that the current signer, contract ID, and network
+passphrase still match the checked intent immediately before transaction
+construction. If they changed, submission stops with `INTENT_CONFIG_MISMATCH`.
+
+The convenience `client.asset.transfer(...)` path performs the same sender and
+recipient preflight once and then uses the same validated send path, avoiding a
+duplicate compliance round-trip on the immediate build-to-submit flow.
 
 Preflight failures use `CompliantTransferIntentError.code`:
 `INVALID_RECIPIENT`, `INVALID_AMOUNT`, `INVALID_CONTRACT`,

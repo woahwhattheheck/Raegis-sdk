@@ -102,6 +102,33 @@ describe('compliant transfer intents', () => {
     );
   });
 
+  it('rechecks compliance at explicit submission and blocks a revoked recipient', async () => {
+    const client = makeClient();
+    const recipient = Keypair.random().publicKey();
+    const check = jest
+      .spyOn(client.compliance, 'checkWhitelist')
+      .mockResolvedValue(true);
+
+    const intent = await client.asset.buildTransferIntent(recipient, 25);
+    expect(check).toHaveBeenCalledTimes(2);
+
+    check.mockReset();
+    check
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+    const send = jest.spyOn(client.rpcServer, 'sendTransaction');
+
+    await expectIntentError(
+      client.asset.submitTransferIntent(intent),
+      'RECIPIENT_NOT_COMPLIANT',
+    );
+
+    expect(check).toHaveBeenCalledTimes(2);
+    expect(check).toHaveBeenNthCalledWith(1, client.keypair!.publicKey());
+    expect(check).toHaveBeenNthCalledWith(2, recipient);
+    expect(send).not.toHaveBeenCalled();
+  });
+
   it('rejects an already-checked intent after signer, contract, or network drift', async () => {
     const client = makeClient();
     const recipient = Keypair.random().publicKey();

@@ -70,7 +70,7 @@ export class AssetModule {
     } catch {
       throw this.transferError(
         'COMPLIANCE_CHECK_FAILED',
-        `Unable to verify ${label} compliance; transfer intent was not built.`,
+        `Unable to verify ${label} compliance; transfer readiness could not be confirmed.`,
       );
     }
     if (!compliant) {
@@ -112,13 +112,12 @@ export class AssetModule {
   }
 
   /**
-   * Submits a previously-built compliant intent. The signer, contract, and
-   * network are rebound to the current client and must still match the intent,
-   * preventing a checked intent from being replayed under different config.
+   * Verifies that a checked intent is still bound to the current signer,
+   * contract, network, recipient, and amount before transaction construction.
    */
-  public async submitTransferIntent(
+  private validateTransferIntentBinding(
     intent: CompliantTransferIntent,
-  ): Promise<string> {
+  ): void {
     const signer = this.client.requireSigner();
     this.validateTransferInput(intent.recipient, intent.amount);
     this.validateTransferConfig();
@@ -133,6 +132,17 @@ export class AssetModule {
         'Transfer intent no longer matches the configured signer, contract, or network.',
       );
     }
+  }
+
+  /**
+   * Constructs and submits a transfer after the caller has established the
+   * required compliance state. Binding is checked again after any async work.
+   */
+  private async sendTransferIntent(
+    intent: CompliantTransferIntent,
+  ): Promise<string> {
+    this.validateTransferIntentBinding(intent);
+    const signer = this.client.requireSigner();
 
     const contract = new Contract(this.client.contractId);
     const call = contract.call(
@@ -159,6 +169,30 @@ export class AssetModule {
     } catch (error) {
       throw new Error(`Transfer transaction failed: ${error}`);
     }
+  }
+
+  /**
+   * Submits a previously-built compliant intent. Explicit intent submission
+   * rechecks sender and recipient compliance immediately before construction,
+   * preventing caller-constructed or stale intents from bypassing preflight.
+   */
+  public async submitTransferIntent(
+    intent: CompliantTransferIntent,
+  ): Promise<string> {
+    this.validateTransferIntentBinding(intent);
+
+    await this.requireCompliant(
+      intent.sender,
+      'SENDER_NOT_COMPLIANT',
+      'sender',
+    );
+    await this.requireCompliant(
+      intent.recipient,
+      'RECIPIENT_NOT_COMPLIANT',
+      'recipient',
+    );
+
+    return this.sendTransferIntent(intent);
   }
 
   /**
@@ -207,6 +241,6 @@ export class AssetModule {
    */
   public async transfer(to: string, amount: number): Promise<string> {
     const intent = await this.buildTransferIntent(to, amount);
-    return this.submitTransferIntent(intent);
+    return this.sendTransferIntent(intent);
   }
 }
