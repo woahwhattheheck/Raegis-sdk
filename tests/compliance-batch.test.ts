@@ -1,0 +1,89 @@
+import { Keypair, Networks } from '@stellar/stellar-sdk';
+import {
+  ComplianceBatchError,
+  ComplianceModule,
+} from '../src/compliance';
+
+function makeHarness() {
+  const signer = Keypair.random();
+  const rpcServer = {
+    getAccount: jest.fn(),
+    prepareTransaction: jest.fn(),
+    sendTransaction: jest.fn(),
+  };
+  const client = {
+    contractId: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM',
+    networkPassphrase: Networks.TESTNET,
+    rpcServer,
+    requireSigner: () => signer,
+    runNetworkOperation: (operation: () => Promise<unknown>) => operation(),
+  } as any;
+
+  return {
+    module: new ComplianceModule(client),
+    rpcServer,
+  };
+}
+
+describe('ComplianceModule batch compliance operations', () => {
+  it('rejects duplicate addresses before any RPC work', async () => {
+    const { module, rpcServer } = makeHarness();
+    const user = Keypair.random().publicKey();
+
+    await expect(
+      module.batchSetComplianceStatus([
+        { user, newStatus: 'Approved' },
+        { user, newStatus: 'Revoked' },
+      ]),
+    ).rejects.toMatchObject<Partial<ComplianceBatchError>>({
+      name: 'ComplianceBatchError',
+      code: 'DUPLICATE_ADDRESS',
+      index: 1,
+      user,
+    });
+
+    expect(rpcServer.getAccount).not.toHaveBeenCalled();
+    expect(rpcServer.prepareTransaction).not.toHaveBeenCalled();
+    expect(rpcServer.sendTransaction).not.toHaveBeenCalled();
+  });
+
+  it('rejects unsupported target states before any RPC work', async () => {
+    const { module, rpcServer } = makeHarness();
+    const user = Keypair.random().publicKey();
+
+    await expect(
+      module.batchSetComplianceStatus([
+        { user, newStatus: 'Unknown' as any },
+      ]),
+    ).rejects.toMatchObject<Partial<ComplianceBatchError>>({
+      name: 'ComplianceBatchError',
+      code: 'INVALID_STATUS',
+      index: 0,
+      user,
+    });
+
+    expect(rpcServer.getAccount).not.toHaveBeenCalled();
+  });
+
+  it('maps whitelist and revocation helpers to explicit lifecycle targets', async () => {
+    const { module } = makeHarness();
+    const first = Keypair.random().publicKey();
+    const second = Keypair.random().publicKey();
+    const submit = jest
+      .spyOn(module, 'batchSetComplianceStatus')
+      .mockResolvedValue('tx-hash');
+
+    await expect(module.batchWhitelist([first, second])).resolves.toBe('tx-hash');
+    expect(submit).toHaveBeenLastCalledWith([
+      { user: first, newStatus: 'Approved' },
+      { user: second, newStatus: 'Approved' },
+    ]);
+
+    submit.mockClear();
+
+    await expect(module.batchRevoke([first])).resolves.toBe('tx-hash');
+    expect(submit).toHaveBeenLastCalledWith([
+      { user: first, newStatus: 'Revoked' },
+    ]);
+  });
+});
