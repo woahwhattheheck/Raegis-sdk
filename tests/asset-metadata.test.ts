@@ -1,7 +1,7 @@
 import {
-  isRwaAssetMetadata,
-  parseRwaAssetMetadata,
-  safeParseRwaAssetMetadata,
+  isAssetMetadata,
+  parseAssetMetadata,
+  safeParseAssetMetadata,
 } from '../src/asset-metadata';
 import { AssetMetadataValidationError } from '../src/errors/asset-metadata';
 import {
@@ -12,7 +12,7 @@ import {
 
 describe('RWA asset metadata parser', () => {
   it('parses and normalizes the canonical metadata shape', () => {
-    expect(parseRwaAssetMetadata(validRwaAssetMetadataFixture)).toEqual({
+    expect(parseAssetMetadata(validRwaAssetMetadataFixture)).toEqual({
       symbol: 'AEGIS-RWA',
       name: 'Aegis Tokenized Real Estate',
       decimals: 7,
@@ -23,13 +23,13 @@ describe('RWA asset metadata parser', () => {
   });
 
   it('accepts metadata without optional fields', () => {
-    expect(parseRwaAssetMetadata(minimalRwaAssetMetadataFixture)).toEqual(
+    expect(parseAssetMetadata(minimalRwaAssetMetadataFixture)).toEqual(
       minimalRwaAssetMetadataFixture
     );
   });
 
   it('returns typed issues for missing and invalid required fields', () => {
-    const result = safeParseRwaAssetMetadata(
+    const result = safeParseAssetMetadata(
       invalidRwaAssetMetadataFixtures.missingAndInvalidRequired
     );
 
@@ -49,7 +49,7 @@ describe('RWA asset metadata parser', () => {
   });
 
   it('validates optional metadata fields when they are present', () => {
-    const result = safeParseRwaAssetMetadata(
+    const result = safeParseAssetMetadata(
       invalidRwaAssetMetadataFixtures.invalidOptionalFields
     );
 
@@ -65,8 +65,8 @@ describe('RWA asset metadata parser', () => {
   });
 
   it('rejects non-object inputs and exposes a matching runtime type guard', () => {
-    expect(() => parseRwaAssetMetadata([])).toThrow(AssetMetadataValidationError);
-    expect(isRwaAssetMetadata(null)).toBe(false);
-    expect(isRwaAssetMetadata(validRwaAssetMetadataFixture)).toBe(true);
+    expect(() => parseAssetMetadata([])).toThrow(AssetMetadataValidationError);
+    expect(isAssetMetadata(null)).toBe(false);
+    expect(isAssetMetadata(validRwaAssetMetadataFixture)).toBe(true);
   });
 });
