@@ -21,6 +21,19 @@ export {
   DEFAULT_MOCK_ASSET_METADATA,
   MOCK_TX_HASH_PREFIX,
   createMockFixtures,
+  createDeterministicComplianceFixtures,
+  buildMockBooleanSimulationResult,
+  buildMockI128SimulationResult,
   buildMockTxHash,
 } from './fixtures';
-export type { MockFixtureSet } from './fixtures';
+export type {
+  MockFixtureSet,
+  MockComplianceState,
+  MockFixtureRole,
+  MockFixtureAccount,
+  MockFixtureAccountName,
+  MockSimulationResult,
+  MockComplianceContractResponse,
+  MockComplianceFixture,
+  DeterministicComplianceFixtureSet,
+} from './fixtures';
