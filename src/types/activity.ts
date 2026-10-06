@@ -1,4 +1,4 @@
-import type { AdminActionReceipt } from './admin-receipt';
+import type { AdminActionReceipt, AdminActionReceiptInput } from './admin-receipt';
 import type { AegisContractEvent } from './contract-event';
 
 export type AegisActivitySource = 'contract-event' | 'admin-receipt';
@@ -81,7 +81,14 @@ export type AegisActivity =
   | AssetMetadataActivity
   | UnknownActivity;
 
-export type AegisActivityInput = AegisContractEvent | AdminActionReceipt;
+export type AdminActionReceiptUnion =
+  AdminActionReceiptInput extends infer TInput
+    ? TInput extends AdminActionReceiptInput
+      ? AdminActionReceipt<TInput>
+      : never
+    : never;
+
+export type AegisActivityInput = AegisContractEvent | AdminActionReceiptUnion;
 
 export interface MapAegisHistoryOptions {
   /**
