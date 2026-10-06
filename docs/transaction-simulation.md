@@ -34,6 +34,14 @@ if (!readiness.ready) {
 The existing `checkWhitelist(address)` path uses the same readiness mapper and
 returns `false` for non-ready simulation states.
 
+## Portfolio reads
+
+`InvestorModule.checkPortfolioReadiness(address, contractId?)` exposes the same
+typed readiness model for a portfolio balance simulation. The normal
+`getPortfolio(address)` path routes balance responses through that mapper so
+non-ready responses remain fail-closed instead of being mistaken for a
+successful balance read.
+
 ## Mint and transfer
 
 `AssetModule.mint()` and `AssetModule.transfer()` simulate their built
