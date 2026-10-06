@@ -81,12 +81,11 @@ Current typed role surfaces are:
 The declared role is an SDK capability boundary, not proof of an on-chain role.
 The contract remains authoritative.
 
-For the complete signer/permission model, use
-[SDK Role and Permission Model](./role-permission-model.md) once that guide is
-available in the target release. Until then, the existing
+For the current signer/permission model, use the existing
 [Role-Aware Client Factory](./role-aware-client-factory.md) and
-[Role Discovery](./role-discovery.md) documents define the current public
-behaviour.
+[Role Discovery](./role-discovery.md) documents. They define the public
+role/capability boundary available on this branch; dashboard integration should
+not depend on guidance that is only present in another pending change.
 
 ## Dashboard state model
 
