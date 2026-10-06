@@ -51,6 +51,25 @@ describe('diagnoseTransferRestrictions', () => {
     });
   });
 
+  it('fails closed when the expected sender is known but signer identity is missing', () => {
+    const result = diagnoseTransferRestrictions({
+      amount: 10,
+      senderWhitelist: 'whitelisted',
+      recipientWhitelist: 'whitelisted',
+      senderAddress: 'G-SENDER',
+    });
+
+    expect(result.status).toBe('unknown');
+    expect(result.canAttempt).toBe(false);
+    expect(result.reasons).toEqual([
+      expect.objectContaining({
+        code: 'SIGNER_UNKNOWN',
+        action: 'use-expected-signer',
+        retryable: false,
+      }),
+    ]);
+  });
+
   it('retains multiple hard restrictions', () => {
     const result = diagnoseTransferRestrictions({
       amount: 0,
