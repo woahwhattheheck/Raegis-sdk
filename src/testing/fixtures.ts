@@ -106,7 +106,7 @@ export interface MockFixtureSet {
 function deterministicPublicKey(seedByte: number): string {
   const seed = new Uint8Array(32);
   seed.fill(seedByte);
-  return Keypair.fromRawEd25519Seed(seed).publicKey();
+  return Keypair.fromRawEd25519Seed(\n    seed as unknown as Parameters<typeof Keypair.fromRawEd25519Seed>[0]\n  ).publicKey();
 }
 
 /**
