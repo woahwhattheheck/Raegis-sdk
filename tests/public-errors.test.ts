@@ -1,5 +1,7 @@
+import { Keypair, Networks } from '@stellar/stellar-sdk';
 import {
   AdminReceiptError,
+  AegisClient,
   AegisSdkError,
   EventDecodeError,
   NetworkFailure,
@@ -49,6 +51,31 @@ describe('public SDK error taxonomy', () => {
       message: 'The compliance status query failed.',
     });
     expect(JSON.stringify(error)).not.toContain('private-value');
+  });
+
+  it('normalizes compliance query failures into the public taxonomy', async () => {
+    const client = new AegisClient({
+      rpcUrl: 'https://soroban-testnet.stellar.org',
+      networkPassphrase: Networks.TESTNET,
+      contractId: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4',
+      keypair: Keypair.random(),
+    });
+    jest
+      .spyOn(client.rpcServer, 'simulateTransaction')
+      .mockResolvedValue({ error: 'raw-provider-detail-should-not-leak' } as any);
+
+    const error = await client.compliance
+      .checkWhitelist(Keypair.random().publicKey())
+      .catch((caught) => caught);
+
+    expect(error).toBeInstanceOf(AegisSdkError);
+    expect(error).toMatchObject({
+      code: 'COMPLIANCE_QUERY_FAILED',
+      category: 'compliance',
+      message: 'The compliance status query failed.',
+      metadata: { operation: 'checkWhitelist' },
+    });
+    expect(JSON.stringify(error)).not.toContain('raw-provider-detail-should-not-leak');
   });
 
   it('preserves the common category surface across existing domain errors', () => {
