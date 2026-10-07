@@ -73,6 +73,10 @@ describe('portfolio normalizer', () => {
 
   it.each([
     [
+      { balance: '1', supported: false },
+      'UNSUPPORTED_ASSET',
+    ],
+    [
       { assetId: 'C_DISABLED', balance: '1', supported: false },
       'UNSUPPORTED_ASSET',
     ],
