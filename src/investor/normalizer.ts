@@ -144,12 +144,12 @@ export function normalizePortfolioHolding(
   let status: NormalizedPortfolioHolding['status'] = 'supported';
   let code: NormalizedPortfolioHolding['code'];
 
-  if (assetId === null) {
-    status = 'unknown';
-    code = 'MISSING_ASSET_ID';
-  } else if (unsupported(source) || unsupported(nested)) {
+  if (unsupported(source) || unsupported(nested)) {
     status = 'unsupported';
     code = 'UNSUPPORTED_ASSET';
+  } else if (assetId === null) {
+    status = 'unknown';
+    code = 'MISSING_ASSET_ID';
   } else if (balance === null) {
     status = 'unsupported';
     code = 'INVALID_BALANCE';
