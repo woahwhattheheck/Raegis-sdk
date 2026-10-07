@@ -17,7 +17,9 @@ const row = (value: unknown): Row | null =>
 function first(source: Row | null, keys: readonly string[]): unknown {
   if (!source) return undefined;
   for (const key of keys) {
-    if (Object.prototype.hasOwnProperty.call(source, key)) return source[key];
+    if (!Object.prototype.hasOwnProperty.call(source, key)) continue;
+    const value = source[key];
+    if (value !== null && value !== undefined) return value;
   }
   return undefined;
 }
