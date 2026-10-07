@@ -171,6 +171,25 @@ describe('RWA asset metadata schema', () => {
     }
   });
 
+  it('rejects oversized decimal supply before BigInt conversion', () => {
+    const bigIntSpy = jest.spyOn(globalThis, 'BigInt');
+
+    try {
+      const result = rwaAssetMetadataSchema.safeParse({
+        ...validRwaAssetMetadataInput,
+        supply: '9'.repeat(10_000),
+      });
+
+      expect(bigIntSpy).not.toHaveBeenCalled();
+      expect(result).toMatchObject({
+        success: false,
+        error: { code: 'INVALID_SUPPLY', field: 'supply' },
+      });
+    } finally {
+      bigIntSpy.mockRestore();
+    }
+  });
+
   it('preserves a valid issuer verbatim', () => {
     expect(parseRwaAssetMetadata(validRwaAssetMetadataInput).issuer).toBe(
       VALID_RWA_ISSUER
