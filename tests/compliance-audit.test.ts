@@ -154,6 +154,33 @@ describe('compliance audit reports', () => {
     );
   });
 
+  it('rejects unsupported runtime evidence sources before building a report', () => {
+    expect(() =>
+      buildComplianceAuditReport({
+        subject: 'portfolio-42',
+        evidence: [
+          {
+            id: 'kyc-state',
+            source: 'external-registry' as never,
+            description: 'Runtime source outside the typed SDK contract',
+          },
+        ],
+        checks: [
+          {
+            code: 'KYC',
+            summary: 'KYC state is unresolved',
+            status: 'unknown',
+            evidenceIds: ['kyc-state'],
+          },
+        ],
+      }),
+    ).toThrow(
+      expect.objectContaining<Partial<ComplianceAuditInputError>>({
+        code: 'INVALID_EVIDENCE_SOURCE',
+      }),
+    );
+  });
+
   it('exposes the same pure builder through ComplianceModule', () => {
     const module = new ComplianceModule({} as AegisClient);
     const report = module.buildAuditReport({
