@@ -14,14 +14,32 @@ const row = (value: unknown): Row | null =>
     ? (value as Row)
     : null;
 
-function first(source: Row | null, keys: readonly string[]): unknown {
-  if (!source) return undefined;
+interface ParsedAlias<T> {
+  present: boolean;
+  value: T | null;
+}
+
+function firstParsed<T>(
+  source: Row | null,
+  keys: readonly string[],
+  parse: (value: unknown) => T | null,
+): ParsedAlias<T> {
+  if (!source) return { present: false, value: null };
+
+  let present = false;
   for (const key of keys) {
     if (!Object.prototype.hasOwnProperty.call(source, key)) continue;
-    const value = source[key];
-    if (value !== null && value !== undefined) return value;
+    const raw = source[key];
+    if (raw === null || raw === undefined) continue;
+
+    present = true;
+    const parsed = parse(raw);
+    if (parsed !== null) {
+      return { present: true, value: parsed };
+    }
   }
-  return undefined;
+
+  return { present, value: null };
 }
 
 function text(value: unknown): string | null {
@@ -31,7 +49,7 @@ function text(value: unknown): string | null {
 }
 
 function stringFrom(primary: Row | null, nested: Row | null, keys: readonly string[]) {
-  return text(first(primary, keys)) ?? text(first(nested, keys));
+  return firstParsed(primary, keys, text).value ?? firstParsed(nested, keys, text).value;
 }
 
 function integer(value: unknown): string | null {
@@ -115,7 +133,7 @@ export function normalizePortfolioHolding(
   options: PortfolioNormalizerOptions = {},
 ): NormalizedPortfolioHolding {
   const source = row(input);
-  const nested = row(first(source, ['metadata', 'asset']));
+  const nested = firstParsed(source, ['metadata', 'asset'], row).value;
   const assetId = stringFrom(source, nested, [
     'assetId',
     'asset_id',
@@ -124,21 +142,23 @@ export function normalizePortfolioHolding(
     'id',
   ]);
 
-  const rawDecimals =
-    first(source, ['decimals', 'assetDecimals', 'asset_decimals']) ??
-    first(nested, ['decimals', 'assetDecimals', 'asset_decimals']);
+  const decimalKeys = ['decimals', 'assetDecimals', 'asset_decimals'] as const;
+  const sourceDecimals = firstParsed(source, decimalKeys, precision);
+  const nestedDecimals = firstParsed(nested, decimalKeys, precision);
   const defaultDecimals = precision(options.defaultDecimals ?? DEFAULT_DECIMALS);
   if (defaultDecimals === null) {
     throw new RangeError(`defaultDecimals must be between 0 and ${MAX_DECIMALS}.`);
   }
   const decimals =
-    rawDecimals === undefined || rawDecimals === null
-      ? defaultDecimals
-      : precision(rawDecimals);
+    sourceDecimals.value ??
+    nestedDecimals.value ??
+    (sourceDecimals.present || nestedDecimals.present ? null : defaultDecimals);
 
-  const balance = integer(
-    first(source, ['balance', 'rawBalance', 'raw_balance', 'amount', 'quantity']),
-  );
+  const balance = firstParsed(
+    source,
+    ['balance', 'rawBalance', 'raw_balance', 'amount', 'quantity'],
+    integer,
+  ).value;
   const metadata = metadataFor(source, nested, decimals, assetId);
 
   let status: NormalizedPortfolioHolding['status'] = 'supported';
