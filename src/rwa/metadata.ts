@@ -13,6 +13,7 @@ import {
 const SYMBOL_PATTERN = /^[A-Z0-9]{2,10}(-[A-Z0-9]{2,10})?$/;
 const STELLAR_ACCOUNT_PATTERN = /^G[A-Z2-7]{55}$/;
 const MAX_I128 = (1n << 127n) - 1n;
+const MAX_I128_DECIMAL = MAX_I128.toString();
 const STATUS_SET = new Set<string>(RWA_ASSET_STATUSES);
 type MetadataField = Exclude<AssetMetadataField, 'metadata'>;
 
@@ -128,8 +129,21 @@ function supply(value: unknown): bigint {
 
   if (typeof value === 'bigint') {
     normalized = value;
-  } else if (typeof value === 'string' && /^\d+$/.test(value.trim())) {
-    normalized = BigInt(value.trim());
+  } else if (typeof value === 'string') {
+    const decimal = value.trim();
+    if (!/^\d+$/.test(decimal)) {
+      return fail('supply', 'INVALID_SUPPLY', 'supply must be an unsigned exact integer');
+    }
+
+    const canonicalDecimal = decimal.replace(/^0+(?=\d)/, '');
+    if (
+      canonicalDecimal.length > MAX_I128_DECIMAL.length ||
+      (canonicalDecimal.length === MAX_I128_DECIMAL.length &&
+        canonicalDecimal > MAX_I128_DECIMAL)
+    ) {
+      return fail('supply', 'INVALID_SUPPLY', 'supply is outside the supported i128 range');
+    }
+    normalized = BigInt(canonicalDecimal);
   } else if (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0) {
     normalized = BigInt(value);
   } else {
