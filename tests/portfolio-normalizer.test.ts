@@ -43,6 +43,20 @@ describe('portfolio normalizer', () => {
     });
   });
 
+  it('uses a later alias when an earlier alias is nullish', () => {
+    const holding = normalizePortfolioHolding({
+      assetId: null,
+      contract_id: 'C_FALLBACK',
+      balance: null,
+      raw_balance: '250',
+      asset: { symbol: 'FALL', decimals: 2 },
+    });
+
+    expect(holding.status).toBe('supported');
+    expect(holding.assetId).toBe('C_FALLBACK');
+    expect(holding.balance).toBe('250');
+    expect(holding.decimalBalance).toBe('2.5');
+  });
   it('preserves unknown rows instead of silently dropping them', () => {
     const holding = normalizePortfolioHolding({
       balance: '50000000',
