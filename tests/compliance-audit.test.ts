@@ -134,6 +134,26 @@ describe('compliance audit reports', () => {
     );
   });
 
+  it('rejects unsupported runtime status values before summarizing', () => {
+    expect(() =>
+      buildComplianceAuditReport({
+        subject: 'portfolio-42',
+        evidence: [],
+        checks: [
+          {
+            code: 'KYC',
+            summary: 'Unexpected external status',
+            status: 'skipped' as never,
+          },
+        ],
+      }),
+    ).toThrow(
+      expect.objectContaining<Partial<ComplianceAuditInputError>>({
+        code: 'INVALID_STATUS',
+      }),
+    );
+  });
+
   it('exposes the same pure builder through ComplianceModule', () => {
     const module = new ComplianceModule({} as AegisClient);
     const report = module.buildAuditReport({
