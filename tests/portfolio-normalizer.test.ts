@@ -57,6 +57,31 @@ describe('portfolio normalizer', () => {
     expect(holding.balance).toBe('250');
     expect(holding.decimalBalance).toBe('2.5');
   });
+
+  it('falls through malformed aliases when a later source alias is valid', () => {
+    const holding = normalizePortfolioHolding({
+      assetId: 42,
+      asset_id: 'C_RECOVERED',
+      balance: '1.25',
+      raw_balance: '250',
+      decimals: 'not-a-precision',
+      asset_decimals: '2',
+      metadata: 'not-an-object',
+      asset: { symbol: 'RECOVERED', name: 'Recovered Asset' },
+    });
+
+    expect(holding).toMatchObject({
+      status: 'supported',
+      assetId: 'C_RECOVERED',
+      balance: '250',
+      decimalBalance: '2.5',
+      metadata: {
+        symbol: 'RECOVERED',
+        name: 'Recovered Asset',
+        decimals: 2,
+      },
+    });
+  });
   it('preserves unknown rows instead of silently dropping them', () => {
     const holding = normalizePortfolioHolding({
       balance: '50000000',
