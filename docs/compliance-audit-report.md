@@ -64,6 +64,8 @@ Invalid input throws `ComplianceAuditInputError` with a stable `code`:
 | `DUPLICATE_EVIDENCE_ID` | Two evidence records use the same normalized id. |
 | `UNKNOWN_EVIDENCE_REFERENCE` | A finding references an evidence id not present in the input. |
 | `EVIDENCE_REQUIRED` | A `pass`, `warn`, or `fail` finding has no evidence reference. |
+| `INVALID_STATUS` | A runtime check status is outside `pass`, `warn`, `fail`, or `unknown`. |
+| `INVALID_EVIDENCE_SOURCE` | A runtime evidence source is outside `protocol`, `sdk`, or `operator`. |
 
 An `unknown` finding may intentionally have no evidence. That state represents an unresolved observation rather than an evidenced conclusion.
 
