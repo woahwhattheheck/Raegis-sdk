@@ -57,7 +57,8 @@ export type ComplianceAuditInputErrorCode =
   | 'DUPLICATE_EVIDENCE_ID'
   | 'UNKNOWN_EVIDENCE_REFERENCE'
   | 'EVIDENCE_REQUIRED'
-  | 'INVALID_STATUS';
+  | 'INVALID_STATUS'
+  | 'INVALID_EVIDENCE_SOURCE';
 
 export class ComplianceAuditInputError extends Error {
   public readonly code: ComplianceAuditInputErrorCode;
@@ -77,6 +78,12 @@ const STATUS_RANK: Record<ComplianceAuditStatus, number> = {
   warn: 1,
   unknown: 2,
   fail: 3,
+};
+
+const EVIDENCE_SOURCES: Record<ComplianceAuditEvidenceSource, true> = {
+  protocol: true,
+  sdk: true,
+  operator: true,
 };
 
 function compareText(left: string, right: string): number {
@@ -104,6 +111,19 @@ function requireStatus(value: ComplianceAuditStatus, field: string): ComplianceA
   return value;
 }
 
+function requireEvidenceSource(
+  value: ComplianceAuditEvidenceSource,
+  field: string
+): ComplianceAuditEvidenceSource {
+  if (!Object.prototype.hasOwnProperty.call(EVIDENCE_SOURCES, value)) {
+    throw new ComplianceAuditInputError(
+      'INVALID_EVIDENCE_SOURCE',
+      field + ' must be one of protocol, sdk, operator'
+    );
+  }
+  return value;
+}
+
 function normalizeEvidence(
   evidence: readonly ComplianceAuditEvidence[]
 ): ComplianceAuditEvidence[] {
@@ -123,6 +143,7 @@ function normalizeEvidence(
       return {
         ...item,
         id,
+        source: requireEvidenceSource(item.source, 'evidence[' + index + '].source'),
         description: item.description.trim(),
         reference: item.reference?.trim() || undefined,
       };
