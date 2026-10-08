@@ -8,11 +8,11 @@ import {
   FetchPortfolioOptions,
   TransferEligibility,
 } from '../types/portfolio';
-import {
+import { paginateArray } from '../config/validate';
+import type {
   PaginatedResult,
   PaginationInput,
-  paginateArray,
-} from '../config/validate';
+} from '../types/pagination';
 import { PortfolioError } from '../errors/portfolio';
 import { parseSorobanResult } from '../utils/xdr-parser';
 
