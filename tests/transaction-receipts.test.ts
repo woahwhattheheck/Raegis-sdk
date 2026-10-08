@@ -119,4 +119,15 @@ describe('Transaction receipts', () => {
       ).toThrow(expect.objectContaining({ code: 'INVALID_EXPLORER_URL' }));
     }
   });
+  it('rejects unsupported receipt operation values at the runtime boundary', () => {
+    expect(() =>
+      buildTransactionReceipt({
+        operation: 'asset-freeze',
+        target: { assetId: 'RWA-1' },
+        status: 'PENDING',
+        networkPassphrase: Networks.TESTNET,
+      } as unknown as Parameters<typeof buildTransactionReceipt>[0]),
+    ).toThrow(expect.objectContaining({ code: 'INVALID_TARGET' }));
+  });
+
 });
