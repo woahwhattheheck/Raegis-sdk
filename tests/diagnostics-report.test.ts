@@ -81,7 +81,7 @@ describe('Aegis SDK diagnostics report', () => {
     });
     const report = client.buildDiagnosticsReport({
       recentErrors: [
-        new NetworkFailure('opaque marker delta', 'RATE_LIMITED', true, {
+        new NetworkFailure('opaque marker-delta', 'RATE_LIMITED', true, {
           retryAfterSeconds: 2,
           cause: { detail: 'marker-epsilon' },
         }),
