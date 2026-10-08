@@ -222,7 +222,7 @@ function normalizeFindings(
       }
       const refs = Array.from(
         new Set(
-          (rawEvidenceIds ?? []).map((id) =>
+          Array.from(rawEvidenceIds ?? []).map((id) =>
             requireIdentifier(id, code + '.evidenceId')
           )
         )
