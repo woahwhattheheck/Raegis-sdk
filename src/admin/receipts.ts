@@ -57,7 +57,8 @@ export function buildAdminTransactionExplorerUrl(
 export function buildAdminActionReceipt<TInput extends AdminActionReceiptInput>(
   input: TInput,
 ): AdminActionReceipt<TInput> {
-  validateTarget(input);
+  const safeTarget = snapshotTarget(input);
+  validateTarget(safeTarget as AdminActionReceiptInput);
 
   const status = normalizeAdminActionStatus(input.status);
   const transactionHash =
@@ -76,8 +77,8 @@ export function buildAdminActionReceipt<TInput extends AdminActionReceiptInput>(
   const failureCode = normalizeReceiptFailureCodeCore(input.failureCode, adminReceiptError);
 
   const receipt: AdminActionReceipt<TInput> = {
-    operation: input.operation,
-    target: cloneTarget(input),
+    operation: safeTarget.operation as TInput['operation'],
+    target: safeTarget.target as TInput['target'],
     status,
     transactionHash,
     explorerUrl: buildAdminTransactionExplorerUrl(
@@ -86,7 +87,7 @@ export function buildAdminActionReceipt<TInput extends AdminActionReceiptInput>(
       input.explorerBaseUrl,
     ),
     observedAt,
-    summary: `${OPERATION_LABELS[input.operation]} ${STATUS_LABELS[status]}.`,
+    summary: `${OPERATION_LABELS[safeTarget.operation]} ${STATUS_LABELS[status]}.`,
     ...(failureCode ? { failureCode } : {}),
   };
 
@@ -124,8 +125,73 @@ function validateTarget(input: AdminActionReceiptInput): void {
   }
 }
 
-function cloneTarget<TInput extends AdminActionReceiptInput>(
-  input: TInput,
-): TInput['target'] {
-  return Object.freeze({ ...input.target }) as TInput['target'];
+const ADMIN_TARGET_FIELDS: Readonly<
+  Record<AdminActionReceiptInput['operation'], readonly string[]>
+> = {
+  'whitelist-add': ['address'],
+  'whitelist-remove': ['address'],
+  'asset-register': ['assetId'],
+  'protocol-pause': ['contractId'],
+  'protocol-unpause': ['contractId'],
+  'asset-mint': ['assetId', 'recipient', 'amount'],
+};
+
+function snapshotTarget(
+  input: AdminActionReceiptInput,
+): Pick<AdminActionReceiptInput, 'operation' | 'target'> {
+  try {
+    if (input === null || typeof input !== 'object' || Array.isArray(input)) {
+      throw new AdminReceiptError(
+        'INVALID_TARGET',
+        'Admin receipt input must be an object with an own target.',
+      );
+    }
+
+    const operationDescriptor = Object.getOwnPropertyDescriptor(input, 'operation');
+    const targetDescriptor = Object.getOwnPropertyDescriptor(input, 'target');
+    if (
+      !operationDescriptor ||
+      !('value' in operationDescriptor) ||
+      !targetDescriptor ||
+      !('value' in targetDescriptor)
+    ) {
+      throw new AdminReceiptError(
+        'INVALID_TARGET',
+        'Admin receipt operation and target must be own data properties.',
+      );
+    }
+
+    const operation = operationDescriptor.value as AdminActionReceiptInput['operation'];
+    const fields = ADMIN_TARGET_FIELDS[operation];
+    const target = targetDescriptor.value;
+    if (!fields || target === null || typeof target !== 'object' || Array.isArray(target)) {
+      throw new AdminReceiptError(
+        'INVALID_TARGET',
+        'Admin receipt target must match a supported operation.',
+      );
+    }
+
+    const values: Record<string, unknown> = {};
+    for (const field of fields) {
+      const descriptor = Object.getOwnPropertyDescriptor(target, field);
+      if (!descriptor || !('value' in descriptor)) {
+        throw new AdminReceiptError(
+          'INVALID_TARGET',
+          `Admin receipt target field ${field} must be an own data property.`,
+        );
+      }
+      values[field] = descriptor.value;
+    }
+
+    return {
+      operation,
+      target: Object.freeze(values) as AdminActionReceiptInput['target'],
+    };
+  } catch (error) {
+    if (error instanceof AdminReceiptError) throw error;
+    throw new AdminReceiptError(
+      'INVALID_TARGET',
+      'Admin receipt target cannot be safely inspected.',
+    );
+  }
 }
