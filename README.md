@@ -135,6 +135,8 @@ troubleshooting guidance.
 See [Runtime Compatibility](docs/runtime-compatibility.md) for the supported
 environments, what the automated probes cover, and integration guidance.
 
+See [SDK Security Threat Model](docs/security-threat-model.md) for signer custody, role/authorization boundaries, RPC trust, compliance-failure semantics, transaction retry risks, and the integration review checklist.
+
 For step-by-step instructions on reproducing and fixing CI check failures, see the [CI Resolution Workflow](docs/ci-resolution-workflow.md).
 
 ## Contributing
