@@ -66,6 +66,7 @@ Invalid input throws `ComplianceAuditInputError` with a stable `code`:
 | `EVIDENCE_REQUIRED` | A `pass`, `warn`, or `fail` finding has no evidence reference. |
 | `INVALID_STATUS` | A runtime check status is outside `pass`, `warn`, `fail`, or `unknown`. |
 | `INVALID_EVIDENCE_SOURCE` | A runtime evidence source is outside `protocol`, `sdk`, or `operator`. |
+| `INVALID_REPORT_INPUT` | A runtime report, list, record, text field, or evidence-id list has the wrong shape or type. |
 
 An `unknown` finding may intentionally have no evidence. That state represents an unresolved observation rather than an evidenced conclusion.
 
@@ -73,6 +74,8 @@ An `unknown` finding may intentionally have no evidence. That state represents a
 
 Treat the builder as a formatting and normalization boundary, not an authority:
 
+- runtime report shapes are validated before normalization; malformed arrays, records, and text fields fail with `INVALID_REPORT_INPUT` rather than leaking native exceptions;
+- report evidence emits only the declared `id`, `source`, `description`, and optional `reference` fields; undeclared caller properties are not copied into exported reports;
 - evidence is accepted as caller-supplied data and is not independently verified;
 - a `pass` status does not establish legal, financial, regulatory, KYC, AML, or transfer eligibility;
 - a `fail` status does not replace protocol enforcement or professional review;
