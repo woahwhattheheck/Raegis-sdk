@@ -1,6 +1,18 @@
 import { Keypair } from '@stellar/stellar-sdk';
 import { AEGIS_ENVIRONMENTS, AegisEnvironmentName } from './environments';
 import { ConfigValidationError } from '../errors/config';
+import type {
+  NormalizedPaginationInput,
+  PaginatedResult,
+  PaginationContinuation,
+  PaginationInput,
+} from '../types/pagination';
+export type {
+  NormalizedPaginationInput,
+  PaginatedResult,
+  PaginationContinuation,
+  PaginationInput,
+} from '../types/pagination';
 
 /**
  * Configuration accepted by `AegisClient`.
@@ -120,33 +132,6 @@ export function resolveClientConfig(config: AegisClientConfig): ResolvedAegisCon
   };
 }
 
-
-/** Shared input accepted by paginated SDK reads. Network cursors remain opaque. */
-export interface PaginationInput {
-  cursor?: string;
-  limit?: number;
-}
-
-export interface NormalizedPaginationInput {
-  cursor?: string;
-  limit: number;
-}
-
-export type PaginationContinuation =
-  | { state: 'has_more'; cursor: string }
-  | { state: 'complete' }
-  | { state: 'unknown'; cursor?: string; reason: string };
-
-export interface PaginationMetadata {
-  limit: number;
-  count: number;
-  continuation: PaginationContinuation;
-}
-
-export interface PaginatedResult<T> {
-  items: T[];
-  pagination: PaginationMetadata;
-}
 
 export type PaginationValidationErrorCode = 'INVALID_CURSOR' | 'INVALID_LIMIT';
 
