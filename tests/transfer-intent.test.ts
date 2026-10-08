@@ -154,10 +154,10 @@ describe('compliant transfer intents', () => {
       .spyOn(client.compliance, 'checkWhitelist')
       .mockResolvedValue(true);
     const sourceAccount = new Account(client.keypair!.publicKey(), '123');
-    jest
+    const getAccount = jest
       .spyOn(client.rpcServer, 'getAccount')
       .mockResolvedValue(sourceAccount);
-    jest
+    const prepare = jest
       .spyOn(client.rpcServer, 'prepareTransaction')
       .mockImplementation(async (tx) => tx as any);
     const send = jest
@@ -169,6 +169,44 @@ describe('compliant transfer intents', () => {
     expect(check).toHaveBeenCalledTimes(2);
     expect(check).toHaveBeenNthCalledWith(1, client.keypair!.publicKey());
     expect(check).toHaveBeenNthCalledWith(2, recipient);
+    expect(getAccount).toHaveBeenCalledTimes(1);
+    expect(getAccount).toHaveBeenCalledWith(client.keypair!.publicKey());
+    expect(prepare).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledWith(await prepare.mock.results[0].value);
+  });
+
+  it('never prepares or submits a transaction for the wrong network account', async () => {
+    const client = makeClient();
+    const recipient = Keypair.random().publicKey();
+    jest.spyOn(client.compliance, 'checkWhitelist').mockResolvedValue(true);
+    const incorrectAccount = new Account(Keypair.random().publicKey(), '123');
+    jest.spyOn(client.rpcServer, 'getAccount').mockResolvedValue(incorrectAccount);
+    const prepare = jest.spyOn(client.rpcServer, 'prepareTransaction');
+    const send = jest.spyOn(client.rpcServer, 'sendTransaction');
+
+    await expectIntentError(client.asset.transfer(recipient, 25), 'INTENT_CONFIG_MISMATCH');
+    expect(prepare).not.toHaveBeenCalled();
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('revalidates the intended network after asynchronous transaction preparation', async () => {
+    const client = makeClient();
+    const recipient = Keypair.random().publicKey();
+    jest.spyOn(client.compliance, 'checkWhitelist').mockResolvedValue(true);
+    jest.spyOn(client.rpcServer, 'getAccount').mockResolvedValue(
+      new Account(client.keypair!.publicKey(), '123'),
+    );
+    const prepare = jest
+      .spyOn(client.rpcServer, 'prepareTransaction')
+      .mockImplementation(async (tx) => {
+        client.networkPassphrase = Networks.PUBLIC;
+        return tx as any;
+      });
+    const send = jest.spyOn(client.rpcServer, 'sendTransaction');
+
+    await expectIntentError(client.asset.transfer(recipient, 25), 'INTENT_CONFIG_MISMATCH');
+    expect(prepare).toHaveBeenCalledTimes(1);
+    expect(send).not.toHaveBeenCalled();
   });
 });
