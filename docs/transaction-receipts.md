@@ -35,7 +35,7 @@ Status mapping is conservative: `SUCCESS` and `CONFIRMED` map to `success`;
 `ERROR` map to `failed`; unknown values map to `unknown`.
 
 A successful receipt requires a 64-character hexadecimal transaction hash.
-Unknown outcomes are never presented as successful.
+Unknown outcomes are never presented as successful. Unexpected non-string RPC status values also become `unknown` instead of throwing or being treated as confirmation. Wrong-type transaction hashes, amounts, failure codes, or explicitly null timestamps are rejected with the SDK's classified receipt errors, not raw JavaScript `TypeError`s.
 
 ## Explorer links
 
