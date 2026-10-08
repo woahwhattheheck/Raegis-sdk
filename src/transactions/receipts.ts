@@ -131,5 +131,11 @@ function validateReceiptTarget(input: TransactionReceiptInput): void {
       return;
     case 'investor-update':
       requireValue(input.target.investor, 'Investor identifier');
+      return;
+    default:
+      throw new TransactionReceiptError(
+        'INVALID_TARGET',
+        'Unsupported transaction receipt operation.',
+      );
   }
 }
