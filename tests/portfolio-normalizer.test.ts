@@ -151,10 +151,10 @@ describe('portfolio normalizer', () => {
       'UNSUPPORTED_ASSET',
     ],
     [
-    [
       { assetId: 'C_STATUS', balance: '1', status: ' Unsupported ' },
       'UNSUPPORTED_ASSET',
     ],
+    [
       { assetId: 'C_BAD_BALANCE', balance: '1.25', decimals: 7 },
       'INVALID_BALANCE',
     ],
