@@ -182,7 +182,19 @@ describe('compliance audit reports', () => {
   });
 
   it('rejects malformed runtime report input and strips undeclared evidence fields', () => {
+    const sparseEvidence = new Array(1);
+    const sparseChecks = new Array(1);
     const malformedInputs = [
+      {
+        subject: 'portfolio-42',
+        evidence: sparseEvidence as never,
+        checks: [{ code: 'KYC', summary: 'Pending', status: 'unknown' as const }],
+      },
+      {
+        subject: 'portfolio-42',
+        evidence: [],
+        checks: sparseChecks as never,
+      },
       {
         subject: 42 as never,
         evidence: [],

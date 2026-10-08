@@ -165,7 +165,7 @@ function normalizeEvidence(evidence: unknown): ComplianceAuditEvidence[] {
 
   const seen = new Set<string>();
 
-  return evidence
+  return Array.from(evidence)
     .map((value, index) => {
       const item = requireRecord(value, 'evidence[' + index + ']');
       const id = requireIdentifier(item.id, 'evidence[' + index + '].id');
@@ -203,7 +203,7 @@ function normalizeFindings(
 
   const seenCodes = new Set<string>();
 
-  return checks
+  return Array.from(checks)
     .map((value, index) => {
       const check = requireRecord(value, 'checks[' + index + ']');
       const code = requireIdentifier(check.code, 'checks[' + index + '].code');
