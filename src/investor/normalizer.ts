@@ -98,7 +98,7 @@ function unsupported(source: Row | null): boolean {
     source.isSupported === false ||
     source.unsupported === true ||
     (typeof source.status === 'string' &&
-      source.status.toLowerCase() === 'unsupported')
+      source.status.trim().toLowerCase() === 'unsupported')
   );
 }
 
