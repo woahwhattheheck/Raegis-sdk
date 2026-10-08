@@ -145,6 +145,11 @@ export function normalizePortfolioHolding(
   const decimalKeys = ['decimals', 'assetDecimals', 'asset_decimals'] as const;
   const sourceDecimals = firstParsed(source, decimalKeys, precision);
   const nestedDecimals = firstParsed(nested, decimalKeys, precision);
+  const precisionAliasExists = [source, nested].some(
+    (candidate) =>
+      candidate !== null &&
+      decimalKeys.some((key) => Object.prototype.hasOwnProperty.call(candidate, key)),
+  );
   const defaultDecimals = precision(options.defaultDecimals ?? DEFAULT_DECIMALS);
   if (defaultDecimals === null) {
     throw new RangeError(`defaultDecimals must be between 0 and ${MAX_DECIMALS}.`);
@@ -152,7 +157,7 @@ export function normalizePortfolioHolding(
   const decimals =
     sourceDecimals.value ??
     nestedDecimals.value ??
-    (sourceDecimals.present || nestedDecimals.present ? null : defaultDecimals);
+    (precisionAliasExists ? null : defaultDecimals);
 
   const balance = firstParsed(
     source,
