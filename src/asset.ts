@@ -191,7 +191,7 @@ export class AssetModule {
     // Soroban's send response is not a ledger-success receipt. Returning a
     // hash for ERROR or TRY_AGAIN_LATER falsely reports a submitted transfer,
     // and a transport failure after POST may have an uncertain outcome.
-    let response: Awaited<ReturnType<typeof this.client.rpcServer.sendTransaction>>;
+    let response: { status?: unknown; hash?: unknown };
     try {
       response = await this.client.rpcServer.sendTransaction(preparedTx);
     } catch {
