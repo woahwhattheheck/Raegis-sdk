@@ -1,10 +1,9 @@
-import { Contract, nativeToScVal, rpc, scValToNative, StrKey } from '@stellar/stellar-sdk';
+import { BASE_FEE, Contract, nativeToScVal, rpc, scValToNative, StrKey, TransactionBuilder } from '@stellar/stellar-sdk';
 import { AegisClient } from './client';
 import {
   ComplianceProtocolStatus,
   ComplianceReadinessResult,
 } from './types/compliance-readiness';
-import { parseSorobanResult } from './utils/xdr-parser';
 
 /**
  * Maps protocol/indexer compliance status into a stable SDK readiness model.
@@ -106,13 +105,20 @@ export class ComplianceModule {
     // Create the invocation for the read-only 'is_whitelisted' function
     const call = contract.call('is_whitelisted', nativeToScVal(address, { type: 'address' }));
 
-    return this.client.runNetworkOperation(() =>
-      this.client.rpcServer.simulateTransaction({
-        // Dummy transaction for simulation purposes
-        transaction: call as any, // Cast required depending on SDK version wrapper
-      } as any)
-    );
+    return this.client.runNetworkOperation(async () => {
+      const sourceAddress = this.client.keypair?.publicKey() ?? address;
+      const account = await this.client.rpcServer.getAccount(sourceAddress);
+      const transaction = new TransactionBuilder(account, {
+        fee: BASE_FEE,
+        networkPassphrase: this.client.networkPassphrase,
+      })
+        .addOperation(call)
+        .setTimeout(30)
+        .build();
 
+      // Simulation needs a serialisable transaction, but never a signature or submission.
+      return this.client.rpcServer.simulateTransaction(transaction);
+    });
   }
 
   public async checkWhitelist(address: string): Promise<boolean> {
@@ -120,8 +126,8 @@ export class ComplianceModule {
 
     // rpc.Api.isSimulationSuccess acts as a type guard here
     // Check for success AND ensure the result object actually exists
-    if (rpc.Api.isSimulationSuccess(result) && result.result) {
-      return parseSorobanResult(result.result.retval as any) as boolean;
+    if (rpc.Api.isSimulationSuccess(result) && result.result && !rpc.Api.isSimulationRestore(result)) {
+      return scValToNative(result.result.retval) === true;
     }
     return false;
   }

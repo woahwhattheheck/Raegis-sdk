@@ -1,4 +1,4 @@
-import { Keypair, Networks, rpc, SorobanDataBuilder, xdr } from '@stellar/stellar-sdk';
+import { Account, BASE_FEE, Keypair, Networks, rpc, scValToNative, SorobanDataBuilder, Transaction, xdr } from '@stellar/stellar-sdk';
 import { AegisClient } from '../src/client';
 import { mapComplianceReadiness } from '../src/compliance';
 import { ComplianceProtocolStatus } from '../src/types/compliance-readiness';
@@ -55,6 +55,49 @@ describe('compliance readiness', () => {
     expect(result.verified).toBe(true);
   });
 
+  test.each([false, true])('builds a serialisable unsigned read with configured source %p', async (withSigner) => {
+    const address = Keypair.random().publicKey();
+    const keypair = Keypair.random();
+    const client = new AegisClient({
+      rpcUrl: 'https://soroban-testnet.stellar.org',
+      networkPassphrase: Networks.TESTNET,
+      contractId,
+      ...(withSigner ? { keypair } : {}),
+    });
+    const source = withSigner ? keypair.publicKey() : address;
+    const getAccount = jest.spyOn(client.rpcServer, 'getAccount')
+      .mockResolvedValue(new Account(source, '42'));
+    const submit = jest.spyOn(client.rpcServer, 'sendTransaction');
+    jest.spyOn(client.rpcServer, 'simulateTransaction').mockImplementation(async (transaction) => {
+      expect(transaction).toBeInstanceOf(Transaction);
+      const read = transaction as Transaction;
+      expect(read.source).toBe(source);
+      expect(read.sequence).toBe('43');
+      expect(read.fee).toBe(BASE_FEE);
+      expect(read.networkPassphrase).toBe(Networks.TESTNET);
+      expect(read.signatures).toHaveLength(0);
+      expect(read.operations).toHaveLength(1);
+      const operation = read.operations[0];
+      expect(operation.type).toBe('invokeHostFunction');
+      if (operation.type !== 'invokeHostFunction') throw new Error('Expected contract read');
+      const invocation = operation.func.invokeContract();
+      expect(invocation.functionName().toString()).toBe('is_whitelisted');
+      expect(scValToNative(invocation.args()[0])).toBe(address);
+      // Exercise the actual serialization that rpc.Server.simulateTransaction requires.
+      expect(read.toXDR()).toEqual(expect.any(String));
+      return simulation(true);
+    });
+    expect((await client.compliance.checkReadiness(address)).state).toBe('approved');
+    expect(getAccount).toHaveBeenCalledWith(source);
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  test.each([true, false])('decodes the legacy parsed whitelist boolean %p', async (whitelisted) => {
+    const client = makeClient();
+    jest.spyOn(client, 'runNetworkOperation').mockResolvedValue(simulation(whitelisted));
+    expect(await client.compliance.checkWhitelist(Keypair.random().publicKey())).toBe(whitelisted);
+  });
+
   it('returns unavailable when the compliance read fails', async () => {
     const client = makeClient();
     jest.spyOn(client, 'runNetworkOperation').mockRejectedValue(new Error('RPC unavailable'));
@@ -97,10 +140,12 @@ describe('compliance readiness', () => {
       ...simulation(true),
       restorePreamble: { minResourceFee: '0', transactionData: new SorobanDataBuilder() },
     });
-    const result = await client.compliance.checkReadiness(Keypair.random().publicKey());
+    const address = Keypair.random().publicKey();
+    const result = await client.compliance.checkReadiness(address);
     expect(result.state).toBe('unavailable');
     expect(result.eligible).toBe(false);
     expect(result.verified).toBe(false);
+    expect(await client.compliance.checkWhitelist(address)).toBe(false);
   });
 
   it('reports unknown for a successful read returning a non-boolean value', async () => {
