@@ -188,12 +188,49 @@ export class AssetModule {
     this.validateTransferIntentBinding(intent);
     preparedTx.sign(signer);
 
+    // Soroban's send response is not a ledger-success receipt. Returning a
+    // hash for ERROR or TRY_AGAIN_LATER falsely reports a submitted transfer,
+    // and a transport failure after POST may have an uncertain outcome.
+    let response: Awaited<ReturnType<typeof this.client.rpcServer.sendTransaction>>;
     try {
-      const response = await this.client.rpcServer.sendTransaction(preparedTx);
-      return response.hash;
-    } catch (error) {
-      throw new Error(`Transfer transaction failed: ${error}`);
+      response = await this.client.rpcServer.sendTransaction(preparedTx);
+    } catch {
+      // Never echo provider error text (which may contain account data).
+      // Do not automatically resubmit an uncertain transaction.
+      throw this.transferError(
+        'SUBMISSION_UNCONFIRMED',
+        'Transfer submission outcome is unknown. Check transaction status before retrying.',
+      );
     }
+
+    let status: unknown;
+    let hash: unknown;
+    try {
+      status = response?.status;
+      hash = response?.hash;
+    } catch {
+      throw this.transferError(
+        'SUBMISSION_UNCONFIRMED',
+        'Transfer submission response could not be verified. Check transaction status before retrying.',
+      );
+    }
+    if (status === 'ERROR') {
+      throw this.transferError(
+        'SUBMISSION_REJECTED',
+        'Transfer submission was rejected by the Soroban RPC endpoint.',
+      );
+    }
+    if (
+      (status !== 'PENDING' && status !== 'DUPLICATE') ||
+      typeof hash !== 'string' ||
+      !/^[a-f0-9]{64}$/i.test(hash)
+    ) {
+      throw this.transferError(
+        'SUBMISSION_UNCONFIRMED',
+        'Transfer submission was not confirmed as accepted. Check transaction status before retrying.',
+      );
+    }
+    return hash;
   }
 
   /**
