@@ -82,6 +82,24 @@ describe('portfolio normalizer', () => {
       },
     });
   });
+  it.each([null, undefined])(
+    'fails closed when a precision alias is explicitly %s',
+    (decimals) => {
+      const holding = normalizePortfolioHolding({
+        assetId: 'C_UNKNOWN_PRECISION',
+        balance: '10000000',
+        decimals,
+      });
+
+      expect(holding).toMatchObject({
+        status: 'unsupported',
+        code: 'INVALID_DECIMALS',
+        decimalBalance: null,
+        metadata: { decimals: null },
+      });
+    },
+  );
+
   it('preserves unknown rows instead of silently dropping them', () => {
     const holding = normalizePortfolioHolding({
       balance: '50000000',
