@@ -2,6 +2,7 @@ import {
   Contract,
   nativeToScVal,
   rpc,
+  StrKey,
   TransactionBuilder,
   xdr,
 } from '@stellar/stellar-sdk';
@@ -26,7 +27,8 @@ export type ComplianceBatchErrorCode =
   | 'INVALID_BATCH'
   | 'INVALID_ADDRESS'
   | 'INVALID_STATUS'
-  | 'DUPLICATE_ADDRESS';
+  | 'DUPLICATE_ADDRESS'
+  | 'BATCH_CONTEXT_CHANGED';
 
 export class ComplianceBatchError extends Error {
   public readonly code: ComplianceBatchErrorCode;
@@ -92,28 +94,54 @@ export class ComplianceModule {
     updates: readonly ComplianceBatchUpdate[],
   ): Promise<string> {
     const signer = this.client.requireSigner();
+    const signerAddress = signer.publicKey();
+    const contractId = this.client.contractId;
+    const networkPassphrase = this.client.networkPassphrase;
     const normalized = this.validateBatch(updates);
-    const contract = new Contract(this.client.contractId);
+    const contract = new Contract(contractId);
+
+    const assertBoundContext = () => {
+      if (
+        this.client.requireSigner().publicKey() !== signerAddress ||
+        this.client.contractId !== contractId ||
+        this.client.networkPassphrase !== networkPassphrase
+      ) {
+        throw new ComplianceBatchError(
+          'Batch compliance context changed before signing or submission.',
+          'BATCH_CONTEXT_CHANGED',
+        );
+      }
+    };
 
     const call = contract.call(
       'batch_set_compliance_status',
-      nativeToScVal(signer.publicKey(), { type: 'address' }),
+      nativeToScVal(signerAddress, { type: 'address' }),
       xdr.ScVal.scvVec(normalized.map((update) => this.encodeUpdate(update))),
     );
 
     return this.client.runNetworkOperation(async () => {
       const sourceAccount = await this.client.rpcServer.getAccount(
-        signer.publicKey(),
+        signerAddress,
       );
+      assertBoundContext();
+      if (sourceAccount.accountId() !== signerAddress) {
+        throw new ComplianceBatchError(
+          'RPC source account does not match the authorized batch signer.',
+          'BATCH_CONTEXT_CHANGED',
+        );
+      }
       const transaction = new TransactionBuilder(sourceAccount, {
         fee: '1000',
-        networkPassphrase: this.client.networkPassphrase,
+        networkPassphrase,
       })
         .addOperation(call)
         .setTimeout(30)
         .build();
 
       const prepared = await this.client.rpcServer.prepareTransaction(transaction);
+      // RPC preparation is asynchronous; reject revoked signer/network/contract
+      // bindings before signing a privileged compliance state transition.
+      assertBoundContext();
       prepared.sign(signer);
 
       const response = await this.client.rpcServer.sendTransaction(prepared);
@@ -172,6 +200,16 @@ export class ComplianceModule {
       }
 
       const user = update.user.trim();
+      // Soroban Address is a valid Stellar public account (G) or contract (C)
+      // identity. Validate before nativeToScVal so malformed entries carry a
+      // stable SDK error and never escape as an unclassified XDR exception.
+      if (!StrKey.isValidEd25519PublicKey(user) && !StrKey.isValidContract(user)) {
+        throw new ComplianceBatchError(
+          `Compliance batch update at index ${index} must contain a Stellar G- or C-address.`,
+          'INVALID_ADDRESS',
+          { index },
+        );
+      }
       if (seen.has(user)) {
         throw new ComplianceBatchError(
           `Compliance batch contains duplicate user ${user}.`,
