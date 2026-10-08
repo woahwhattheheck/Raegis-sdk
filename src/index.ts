@@ -17,6 +17,7 @@ export type {
 export * from './types/client-factory';
 export * from './errors/client-factory';
 export { ComplianceModule } from './compliance';
+export { isComplianceStatus, mapComplianceStatusTransition } from './compliance-transition';
 export { AssetModule } from './asset';
 export { InvestorModule } from './investor/portfolio';
 export { RoleModule } from './role';
@@ -47,6 +48,7 @@ export * from './errors/portfolio';
 export * from './types/role';
 export * from './errors/role';
 export * from './types/admin-receipt';
+export * from './types/compliance-transition';
 export * from './errors/network';
 export * from './errors/config';
 export * from './types/contract-event';
