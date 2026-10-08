@@ -85,6 +85,22 @@ const capability = await aegis.role.checkCapability('G_USER_PUBLIC_KEY', 'receiv
 console.log('Can receive transfer?', capability.isPermitted);
 ```
 
+## Compliance Status Transitions
+Map changes between protocol-facing compliance states without turning UI state into
+an authorization decision.
+
+```typescript
+import { mapComplianceStatusTransition } from '@aegis/sdk';
+
+const transition = mapComplianceStatusTransition('pending', 'approved');
+console.log(transition.code);   // 'ELIGIBILITY_GRANTED'
+console.log(transition.action); // 'allow'
+```
+
+See [Compliance Status Transitions](./docs/compliance-status-transitions.md) for
+state semantics, edge cases, runtime guards, dashboard guidance, and the
+protocol-only security boundary.
+
 ## Contract Event Decoder
 Decode Soroban contract events into typed audit-trail models for dashboards and indexers.
 
