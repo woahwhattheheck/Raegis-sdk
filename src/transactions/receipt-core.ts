@@ -35,6 +35,9 @@ const STATUS_ALIASES: Readonly<Record<string, TransactionReceiptStatus>> = {
 export function normalizeTransactionReceiptStatusCore(
   status: TransactionReceiptStatusInput | string,
 ): TransactionReceiptStatus {
+  // Runtime RPC statuses are not always typed. An absent or malformed status
+  // must remain unknown, never crash a receipt or imply finality.
+  if (typeof status !== 'string') return 'unknown';
   return STATUS_ALIASES[status.trim().toUpperCase()] ?? 'unknown';
 }
 
@@ -42,6 +45,12 @@ export function normalizeTransactionHashCore(
   transactionHash: string,
   errorFactory: ReceiptErrorFactory,
 ): string {
+  if (typeof transactionHash !== 'string') {
+    throw errorFactory(
+      'INVALID_TRANSACTION_HASH',
+      'Transaction hash must contain exactly 64 hexadecimal characters.',
+    );
+  }
   const normalizedHash = transactionHash.trim().toLowerCase();
   if (!TRANSACTION_HASH_PATTERN.test(normalizedHash)) {
     throw errorFactory(
@@ -70,6 +79,9 @@ export function normalizeReceiptObservedAtCore(
   observedAt: Date | string | undefined,
   errorFactory: ReceiptErrorFactory,
 ): string {
+  if (observedAt !== undefined && !(observedAt instanceof Date) && typeof observedAt !== 'string') {
+    throw errorFactory('INVALID_TIMESTAMP', 'Receipt timestamp must be a valid date.');
+  }
   const date = observedAt instanceof Date ? observedAt : new Date(observedAt ?? Date.now());
   if (Number.isNaN(date.getTime())) {
     throw errorFactory('INVALID_TIMESTAMP', 'Receipt timestamp must be a valid date.');
@@ -81,7 +93,13 @@ export function normalizeReceiptFailureCodeCore(
   failureCode: string | undefined,
   errorFactory: ReceiptErrorFactory,
 ): string | undefined {
-  if (!failureCode) return undefined;
+  if (failureCode === undefined || failureCode === '') return undefined;
+  if (typeof failureCode !== 'string') {
+    throw errorFactory(
+      'INVALID_FAILURE_CODE',
+      'Failure code must be 1-64 safe uppercase identifier characters.',
+    );
+  }
 
   const normalized = failureCode.trim().toUpperCase();
   if (!FAILURE_CODE_PATTERN.test(normalized)) {
@@ -94,7 +112,7 @@ export function normalizeReceiptFailureCodeCore(
 }
 
 export function isPositiveReceiptAmount(amount: string): boolean {
-  return POSITIVE_AMOUNT_PATTERN.test(amount.trim());
+  return typeof amount === 'string' && POSITIVE_AMOUNT_PATTERN.test(amount.trim());
 }
 
 function normalizeCustomExplorerBase(
