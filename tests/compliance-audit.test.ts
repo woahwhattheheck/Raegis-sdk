@@ -220,6 +220,16 @@ describe('compliance audit reports', () => {
           evidenceIds: 'kyc-state' as never,
         }],
       },
+      {
+        subject: 'portfolio-42',
+        evidence: [],
+        checks: [{
+          code: 'KYC',
+          summary: 'Pending',
+          status: 'unknown' as const,
+          evidenceIds: new Array(1) as never,
+        }],
+      },
     ];
 
     for (const input of malformedInputs) {
