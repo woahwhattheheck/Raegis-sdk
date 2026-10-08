@@ -52,10 +52,16 @@ partial result.
 
 The SDK performs deterministic preflight checks before RPC work:
 
+- nonempty malformed addresses (not a valid Stellar G-account or C-contract
+  identity) are rejected with `ComplianceBatchError.code === 'INVALID_ADDRESS'`
+  *before* address-XDR construction or network calls;
 - duplicate addresses are rejected with
   `ComplianceBatchError.code === 'DUPLICATE_ADDRESS'`;
 - unsupported target states are rejected with `INVALID_STATUS`;
 - structurally invalid batch input is rejected with `INVALID_BATCH`;
+- an account response for another signer, or a signer/contract/network setting
+  that changes while fetching the account or preparing Soroban authorization,
+  is rejected with `BATCH_CONTEXT_CHANGED` before signing or submission;
 - empty batches are permitted by the current contract entrypoint.
 
 `batchWhitelist()` maps every address to `Approved`.
