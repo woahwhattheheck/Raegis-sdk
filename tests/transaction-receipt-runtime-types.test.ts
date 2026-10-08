@@ -40,6 +40,38 @@ describe('receipt runtime type boundaries', () => {
     })).toThrow(expect.objectContaining({ code: 'INVALID_TIMESTAMP' }));
   });
 
+  it('never invokes target accessors or accepts changed fields after validation', () => {
+    let getterReads = 0;
+    const accessor = {
+      ...mint.target,
+      get amount(): string {
+        getterReads++;
+        return getterReads === 1 ? '2' : 'not-an-amount';
+      },
+    };
+    expect(() => buildTransactionReceipt({
+      ...mint, target: accessor,
+    })).toThrow(expect.objectContaining({ code: 'INVALID_TARGET' }));
+    expect(getterReads).toBe(0);
+
+    const inherited = Object.create(mint.target) as typeof mint.target;
+    expect(() => buildTransactionReceipt({
+      ...mint, target: inherited,
+    })).toThrow(expect.objectContaining({ code: 'INVALID_TARGET' }));
+
+    const { proxy, revoke } = Proxy.revocable(mint.target, {});
+    revoke();
+    expect(() => buildTransactionReceipt({
+      ...mint, target: proxy,
+    })).toThrow(expect.objectContaining({ code: 'INVALID_TARGET' }));
+
+    const mutableTarget = { ...mint.target };
+    const receipt = buildTransactionReceipt({ ...mint, target: mutableTarget });
+    mutableTarget.amount = 'not-an-amount';
+    expect(receipt.target.amount).toBe('2');
+    expect(Object.isFrozen(receipt.target)).toBe(true);
+  });
+
   it('rejects malformed target records and compliance flags with stable errors', () => {
     for (const target of [null, [], 7, true]) {
       expect(() => buildTransactionReceipt({
