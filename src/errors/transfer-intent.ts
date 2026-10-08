@@ -6,7 +6,9 @@ export type CompliantTransferIntentErrorCode =
   | 'SENDER_NOT_COMPLIANT'
   | 'RECIPIENT_NOT_COMPLIANT'
   | 'COMPLIANCE_CHECK_FAILED'
-  | 'INTENT_CONFIG_MISMATCH';
+  | 'INTENT_CONFIG_MISMATCH'
+  | 'SUBMISSION_REJECTED'
+  | 'SUBMISSION_UNCONFIRMED';
 
 export class CompliantTransferIntentError extends Error {
   public readonly code: CompliantTransferIntentErrorCode;
