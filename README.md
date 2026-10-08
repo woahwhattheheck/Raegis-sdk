@@ -10,74 +10,108 @@ npm install @aegis/sdk
 
 ## Quickstart
 
-Use the role-aware factory to construct a client with explicit capability
-intent. The returned object only exposes modules and operations that are
-appropriate for the declared role.
+Prefer the narrowest client role that can do the job. Read-only compliance and
+portfolio calls do **not** need a signing key.
+
+### Read-only compliance query
 
 ```typescript
-import {
-  createReadOnlyClient,
-  createInvestorClient,
-  createIssuerClient,
-  createAdminClient,
-} from '@aegis/sdk';
-import { Keypair } from '@stellar/stellar-sdk';
+import { createReadOnlyClient } from '@aegis/sdk';
 
-// Read-only — no keypair needed. Suitable for dashboards and indexers.
 const reader = createReadOnlyClient({
   environment: 'testnet',
   contractId: 'C_YOUR_CONTRACT_ID',
 });
-const isApproved = await reader.compliance.checkWhitelist('G_USER_PUBLIC_KEY');
-const portfolio  = await reader.investor.getPortfolio('G_USER_PUBLIC_KEY');
 
-// Investor — keypair required. Transfer capability only.
-const investor = createInvestorClient({
-  environment: 'testnet',
-  contractId: 'C_YOUR_CONTRACT_ID',
-  keypair: Keypair.fromSecret('S_INVESTOR_SECRET'),
-});
-await investor.asset.transfer('G_RECIPIENT', 100);
-
-// Issuer — keypair required. Adds asset minting.
-const issuer = createIssuerClient({
-  environment: 'testnet',
-  contractId: 'C_YOUR_CONTRACT_ID',
-  keypair: Keypair.fromSecret('S_ISSUER_SECRET'),
-});
-await issuer.asset.mint('G_INVESTOR', 5000);
-
-// Admin — keypair required. Full access.
-const admin = createAdminClient({
-  environment: 'testnet',
-  contractId: 'C_YOUR_CONTRACT_ID',
-  keypair: Keypair.fromSecret('S_ADMIN_SECRET'),
-});
-admin.assertAdminAccess(); // explicit guard before privileged call
-await admin.asset.mint('G_INVESTOR', 10000);
+const isApproved = await reader.compliance.checkWhitelist(
+  'G_USER_PUBLIC_KEY',
+);
+console.log('Protocol whitelist result:', isApproved);
 ```
 
-See [Role-Aware Client Factory](./docs/role-aware-client-factory.md) for the
-full capability matrix, `compliance-operator` usage, error handling, and
-security notes.
+The read-only client exposes query modules without accepting a `Keypair`, which
+keeps dashboard and support tooling from accidentally gaining signing
+capability.
 
-For direct `AegisClient` construction (advanced / custom setups):
+### Admin calls require signer capability
+
+Create signer-backed clients only inside a trusted runtime. Pass signing
+material into a narrow construction boundary after loading it from your
+deployment environment or secret manager; do not hard-code it in source.
+
+```typescript
+import { createAdminClient } from '@aegis/sdk';
+import { Keypair } from '@stellar/stellar-sdk';
+
+function createTrustedAdminClient(signingSecret: string) {
+  const signer = Keypair.fromSecret(signingSecret);
+
+  return createAdminClient({
+    environment: 'testnet',
+    contractId: 'C_YOUR_CONTRACT_ID',
+    keypair: signer,
+  });
+}
+
+export async function mintFromTrustedRuntime(
+  signingSecret: string,
+  recipient: string,
+  amount: number,
+) {
+  const admin = createTrustedAdminClient(signingSecret);
+  admin.assertAdminAccess();
+  return admin.asset.mint(recipient, amount);
+}
+```
+
+`assertAdminAccess()` is an SDK capability guardrail, not a replacement for
+on-chain authorisation. The deployed contract remains authoritative.
+
+### Custom RPC configuration
+
+Use a named environment preset when possible. If you need an explicit endpoint,
+include the URL scheme and pair it with the matching Stellar network
+passphrase:
 
 ```typescript
 import { AegisClient } from '@aegis/sdk';
+import { Networks } from '@stellar/stellar-sdk';
 
-const aegis = new AegisClient({
-  environment: 'testnet',
+const customReader = new AegisClient({
+  rpcUrl: 'https://soroban-testnet.stellar.org',
+  networkPassphrase: Networks.TESTNET,
   contractId: 'C_YOUR_CONTRACT_ID',
-  keypair: Keypair.fromSecret('S...'), // optional for read-only
 });
+
+const isApproved = await customReader.compliance.checkWhitelist(
+  'G_USER_PUBLIC_KEY',
+);
 ```
+
+### Signing-key safety
+
+- Never commit or hard-code signing secrets in source, examples, fixtures, logs,
+  screenshots, or issue reports.
+- Load signer material from the runtime's environment/secret manager immediately
+  before creating a signer-backed client.
+- Keep admin and issuer signers on trusted server-side or otherwise protected
+  runtimes; do not expose raw signing material to browser bundles.
+- Use `createReadOnlyClient` for dashboards, indexers, support tools, and any
+  flow that does not submit state-changing transactions.
+- Do not log a `Keypair`, its secret, or a signer-backed client while debugging.
+
+See [Role-Aware Client Factory](./docs/role-aware-client-factory.md) for the
+full capability matrix, `compliance-operator` usage, and security boundaries.
+
+For direct `AegisClient` construction, use the signer-free custom example
+above for reads and add `keypair` only when the specific operation requires
+signing.
 
 ## Role Discovery & Capability Checks
 Check what an address is classified as, and what it can currently attempt through the SDK.
 This is a client-side convenience for UI gating, not on-chain authorization — see the
 [full documentation](./docs/role-discovery.md) for important caveats.
-```TypeScript
+```typescript
 const roleResult = await aegis.role.discoverRole('G_USER_PUBLIC_KEY');
 console.log('Role:', roleResult.role); // 'investor' | 'unauthorized' | 'unknown'
 
