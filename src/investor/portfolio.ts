@@ -8,6 +8,11 @@ import {
   FetchPortfolioOptions,
   TransferEligibility,
 } from '../types/portfolio';
+import {
+  PaginatedResult,
+  PaginationInput,
+  paginateArray,
+} from '../config/validate';
 import { PortfolioError } from '../errors/portfolio';
 import { parseSorobanResult } from '../utils/xdr-parser';
 
@@ -126,6 +131,19 @@ export class InvestorModule {
       isBlocked,
       fetchedAt,
     };
+  }
+
+  /**
+   * Pages an already-fetched holdings collection with SDK-owned offset cursors.
+   *
+   * These cursors are deterministic for the supplied collection and must not be
+   * reused as Soroban RPC cursors.
+   */
+  public paginateHoldings(
+    holdings: readonly AssetHolding[],
+    pagination: PaginationInput = {}
+  ): PaginatedResult<AssetHolding> {
+    return paginateArray(holdings, pagination);
   }
 
   /**
