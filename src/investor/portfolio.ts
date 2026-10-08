@@ -59,25 +59,49 @@ export class InvestorModule {
       return result('ineligible', 'INVALID_AMOUNT', 'Amount must be a positive finite number.');
     }
 
-    const sourceStatus = await this.client.compliance.observeWhitelist(source);
-    if (sourceStatus.state === 'not_approved') {
+    // Observation results can arrive through adapters or caches. Never treat a
+    // response for another account, a malformed state, or a contradictory
+    // whitelist boolean/code as proof that THIS account is approved.
+    const observeVerified = async (address: string): Promise<
+      'approved' | 'not_approved' | 'unknown' | 'unavailable'
+    > => {
+      try {
+        const value = await this.client.compliance.observeWhitelist(address);
+        if (!value || value.address !== address) return 'unknown';
+        if (value.state === 'approved' &&
+            value.isWhitelisted === true &&
+            value.code === 'WHITELIST_APPROVED') return 'approved';
+        if (value.state === 'not_approved' &&
+            value.isWhitelisted === false &&
+            value.code === 'WHITELIST_NOT_APPROVED') return 'not_approved';
+        if (value.state === 'unavailable' &&
+            value.isWhitelisted === null &&
+            value.code === 'WHITELIST_QUERY_FAILED') return 'unavailable';
+        return 'unknown';
+      } catch {
+        return 'unavailable';
+      }
+    };
+
+    const sourceStatus = await observeVerified(source);
+    if (sourceStatus === 'not_approved') {
       return result('ineligible', 'SOURCE_NOT_WHITELISTED', 'Source is not whitelisted by the protocol.');
     }
-    if (sourceStatus.state === 'unknown') {
+    if (sourceStatus === 'unknown') {
       return result('unknown', 'SOURCE_STATUS_UNKNOWN', 'Source whitelist status could not be determined.');
     }
-    if (sourceStatus.state === 'unavailable') {
+    if (sourceStatus === 'unavailable') {
       return result('unavailable', 'SOURCE_QUERY_FAILED', 'Source whitelist query was unavailable.');
     }
 
-    const destinationStatus = await this.client.compliance.observeWhitelist(destination);
-    if (destinationStatus.state === 'not_approved') {
+    const destinationStatus = await observeVerified(destination);
+    if (destinationStatus === 'not_approved') {
       return result('ineligible', 'DESTINATION_NOT_WHITELISTED', 'Destination is not whitelisted by the protocol.');
     }
-    if (destinationStatus.state === 'unknown') {
+    if (destinationStatus === 'unknown') {
       return result('unknown', 'DESTINATION_STATUS_UNKNOWN', 'Destination whitelist status could not be determined.');
     }
-    if (destinationStatus.state === 'unavailable') {
+    if (destinationStatus === 'unavailable') {
       return result('unavailable', 'DESTINATION_QUERY_FAILED', 'Destination whitelist query was unavailable.');
     }
 
