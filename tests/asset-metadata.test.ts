@@ -98,6 +98,28 @@ describe('RWA asset metadata schema', () => {
     });
   });
 
+
+  it('rejects non-ASCII ticker lookalikes before canonicalization', () => {
+    for (const symbol of ['ß', 'ıUSD', 'uſd']) {
+      expect(
+        rwaAssetMetadataSchema.safeParse({
+          ...validRwaAssetMetadataInput,
+          symbol,
+        })
+      ).toMatchObject({
+        success: false,
+        error: { code: 'INVALID_SYMBOL', field: 'symbol' },
+      });
+    }
+
+    expect(
+      parseRwaAssetMetadata({
+        ...validRwaAssetMetadataInput,
+        symbol: 'usd',
+      }).symbol
+    ).toBe('USD');
+  });
+
   it('rejects names outside the documented bounds', () => {
     const invalidNames = ['x', '😀😀', '😀'.repeat(129)];
 

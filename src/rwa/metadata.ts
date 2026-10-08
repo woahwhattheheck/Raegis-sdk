@@ -10,7 +10,7 @@ import {
   RwaAssetStatus,
 } from '../types/asset-metadata';
 
-const SYMBOL_PATTERN = /^[A-Z0-9]{2,10}(-[A-Z0-9]{2,10})?$/;
+const SYMBOL_PATTERN = /^[A-Za-z0-9]{2,10}(-[A-Za-z0-9]{2,10})?$/;
 const STELLAR_ACCOUNT_PATTERN = /^G[A-Z2-7]{55}$/;
 const MAX_I128 = (1n << 127n) - 1n;
 const MAX_I128_DECIMAL = MAX_I128.toString();
@@ -92,11 +92,11 @@ function symbol(value: unknown): string {
   if (typeof value !== 'string') {
     return fail('symbol', 'INVALID_SYMBOL', 'symbol must be a string');
   }
-  const normalized = value.trim().toUpperCase();
-  if (!SYMBOL_PATTERN.test(normalized)) {
+  const trimmed = value.trim();
+  if (!SYMBOL_PATTERN.test(trimmed)) {
     return fail('symbol', 'INVALID_SYMBOL', 'symbol has an invalid format');
   }
-  return normalized;
+  return trimmed.toUpperCase();
 }
 
 function name(value: unknown): string {
