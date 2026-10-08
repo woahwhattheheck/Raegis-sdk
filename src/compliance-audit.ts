@@ -58,7 +58,8 @@ export type ComplianceAuditInputErrorCode =
   | 'UNKNOWN_EVIDENCE_REFERENCE'
   | 'EVIDENCE_REQUIRED'
   | 'INVALID_STATUS'
-  | 'INVALID_EVIDENCE_SOURCE';
+  | 'INVALID_EVIDENCE_SOURCE'
+  | 'INVALID_REPORT_INPUT';
 
 export class ComplianceAuditInputError extends Error {
   public readonly code: ComplianceAuditInputErrorCode;
@@ -90,8 +91,35 @@ function compareText(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
 }
 
-function requireIdentifier(value: string, field: string): string {
-  const normalized = value.trim();
+function invalidReportInput(field: string): never {
+  throw new ComplianceAuditInputError(
+    'INVALID_REPORT_INPUT',
+    field + ' has an invalid runtime shape or type'
+  );
+}
+
+function requireRecord(value: unknown, field: string): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return invalidReportInput(field);
+  }
+  return value as Record<string, unknown>;
+}
+
+function requireText(value: unknown, field: string): string {
+  if (typeof value !== 'string') {
+    return invalidReportInput(field);
+  }
+  return value.trim();
+}
+
+function requireOptionalText(value: unknown, field: string): string | undefined {
+  if (value === undefined) return undefined;
+  const normalized = requireText(value, field);
+  return normalized || undefined;
+}
+
+function requireIdentifier(value: unknown, field: string): string {
+  const normalized = requireText(value, field);
   if (!normalized) {
     throw new ComplianceAuditInputError(
       'EMPTY_IDENTIFIER',
@@ -101,36 +129,45 @@ function requireIdentifier(value: string, field: string): string {
   return normalized;
 }
 
-function requireStatus(value: ComplianceAuditStatus, field: string): ComplianceAuditStatus {
+function requireStatus(value: unknown, field: string): ComplianceAuditStatus {
+  if (typeof value !== 'string') {
+    return invalidReportInput(field);
+  }
   if (!Object.prototype.hasOwnProperty.call(STATUS_RANK, value)) {
     throw new ComplianceAuditInputError(
       'INVALID_STATUS',
       field + ' must be one of pass, warn, fail, unknown'
     );
   }
-  return value;
+  return value as ComplianceAuditStatus;
 }
 
 function requireEvidenceSource(
-  value: ComplianceAuditEvidenceSource,
+  value: unknown,
   field: string
 ): ComplianceAuditEvidenceSource {
+  if (typeof value !== 'string') {
+    return invalidReportInput(field);
+  }
   if (!Object.prototype.hasOwnProperty.call(EVIDENCE_SOURCES, value)) {
     throw new ComplianceAuditInputError(
       'INVALID_EVIDENCE_SOURCE',
       field + ' must be one of protocol, sdk, operator'
     );
   }
-  return value;
+  return value as ComplianceAuditEvidenceSource;
 }
 
-function normalizeEvidence(
-  evidence: readonly ComplianceAuditEvidence[]
-): ComplianceAuditEvidence[] {
+function normalizeEvidence(evidence: unknown): ComplianceAuditEvidence[] {
+  if (!Array.isArray(evidence)) {
+    return invalidReportInput('evidence');
+  }
+
   const seen = new Set<string>();
 
   return evidence
-    .map((item, index) => {
+    .map((value, index) => {
+      const item = requireRecord(value, 'evidence[' + index + ']');
       const id = requireIdentifier(item.id, 'evidence[' + index + '].id');
       if (seen.has(id)) {
         throw new ComplianceAuditInputError(
@@ -141,20 +178,22 @@ function normalizeEvidence(
       seen.add(id);
 
       return {
-        ...item,
         id,
         source: requireEvidenceSource(item.source, 'evidence[' + index + '].source'),
-        description: item.description.trim(),
-        reference: item.reference?.trim() || undefined,
+        description: requireText(item.description, 'evidence[' + index + '].description'),
+        reference: requireOptionalText(item.reference, 'evidence[' + index + '].reference'),
       };
     })
     .sort((left, right) => compareText(left.id, right.id));
 }
 
 function normalizeFindings(
-  checks: readonly ComplianceAuditCheckInput[],
+  checks: unknown,
   evidenceIds: ReadonlySet<string>
 ): ComplianceAuditFinding[] {
+  if (!Array.isArray(checks)) {
+    return invalidReportInput('checks');
+  }
   if (checks.length === 0) {
     throw new ComplianceAuditInputError(
       'EMPTY_CHECKS',
@@ -165,7 +204,8 @@ function normalizeFindings(
   const seenCodes = new Set<string>();
 
   return checks
-    .map((check, index) => {
+    .map((value, index) => {
+      const check = requireRecord(value, 'checks[' + index + ']');
       const code = requireIdentifier(check.code, 'checks[' + index + '].code');
       const status = requireStatus(check.status, code + '.status');
       if (seenCodes.has(code)) {
@@ -176,9 +216,13 @@ function normalizeFindings(
       }
       seenCodes.add(code);
 
+      const rawEvidenceIds = check.evidenceIds;
+      if (rawEvidenceIds !== undefined && !Array.isArray(rawEvidenceIds)) {
+        return invalidReportInput(code + '.evidenceIds');
+      }
       const refs = Array.from(
         new Set(
-          (check.evidenceIds ?? []).map((id) =>
+          (rawEvidenceIds ?? []).map((id) =>
             requireIdentifier(id, code + '.evidenceId')
           )
         )
@@ -202,7 +246,7 @@ function normalizeFindings(
 
       return {
         code,
-        summary: check.summary.trim(),
+        summary: requireText(check.summary, code + '.summary'),
         status,
         evidenceIds: refs,
       };
@@ -239,19 +283,20 @@ function overallStatus(findings: readonly ComplianceAuditFinding[]): ComplianceA
 }
 
 export function buildComplianceAuditReport(input: ComplianceAuditInput): ComplianceAuditReport {
-  const subject = input.subject.trim();
+  const reportInput = requireRecord(input, 'report');
+  const subject = requireText(reportInput.subject, 'subject');
   if (!subject) {
     throw new ComplianceAuditInputError('EMPTY_SUBJECT', 'subject must be non-empty');
   }
 
-  const evidence = normalizeEvidence(input.evidence);
+  const evidence = normalizeEvidence(reportInput.evidence);
   const evidenceIds = new Set(evidence.map((item) => item.id));
-  const findings = normalizeFindings(input.checks, evidenceIds);
+  const findings = normalizeFindings(reportInput.checks, evidenceIds);
 
   return {
     schemaVersion: 1,
     subject,
-    asOf: input.asOf?.trim() || undefined,
+    asOf: requireOptionalText(reportInput.asOf, 'asOf'),
     overallStatus: overallStatus(findings),
     summary: summarize(findings),
     findings,
