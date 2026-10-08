@@ -18,6 +18,11 @@ Before explicit intent submission, the SDK rechecks sender and recipient
 compliance. It then rechecks that the current signer, contract ID, and network
 passphrase still match the checked intent immediately before transaction
 construction. If they changed, submission stops with `INTENT_CONFIG_MISMATCH`.
+The send path fetches the current Stellar account sequence using RPC rather than
+hardcoding a sequence of zero, prepares the Soroban invocation to attach its
+simulation footprint and authorizations, then checks signer/contract/network
+binding **again** after those asynchronous steps and before signing. A live
+account belonging to a different signer is rejected without submission.
 
 The convenience `client.asset.transfer(...)` path performs the same sender and
 recipient preflight once and then uses the same validated send path, avoiding a
