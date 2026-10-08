@@ -1,16 +1,102 @@
-import { Contract, nativeToScVal, rpc } from '@stellar/stellar-sdk';
+import { Contract, nativeToScVal, rpc, StrKey } from '@stellar/stellar-sdk';
 import { AegisClient } from './client';
+import {
+  ComplianceProtocolStatus,
+  ComplianceReadinessResult,
+} from './types/compliance-readiness';
 import { parseSorobanResult } from './utils/xdr-parser';
 
-export class ComplianceModule {
-private client: AegisClient;
+/**
+ * Maps protocol/indexer compliance status into a stable SDK readiness model.
+ *
+ * This function describes protocol state only. It does not assert legal KYC,
+ * accreditation, sanctions screening, or any other off-chain determination.
+ */
+export function mapComplianceReadiness(
+  address: string,
+  status: ComplianceProtocolStatus,
+  checkedAt = new Date().toISOString()
+): ComplianceReadinessResult {
+  switch (status) {
+    case true:
+    case 'approved':
+    case 'whitelisted':
+      return {
+        address,
+        state: 'approved',
+        eligible: true,
+        verified: true,
+        code: 'APPROVED',
+        reason: 'Address is approved by the observed protocol whitelist state.',
+        checkedAt,
+      };
+    case false:
+    case 'blocked':
+    case 'not_whitelisted':
+      return {
+        address,
+        state: 'blocked',
+        eligible: false,
+        verified: true,
+        code: 'NOT_WHITELISTED',
+        reason: 'Address is not approved by the observed protocol whitelist state.',
+        checkedAt,
+      };
+    case 'revoked':
+      return {
+        address,
+        state: 'revoked',
+        eligible: false,
+        verified: true,
+        code: 'REVOKED',
+        reason: 'Protocol eligibility was revoked.',
+        checkedAt,
+      };
+    case 'pending':
+      return {
+        address,
+        state: 'pending',
+        eligible: false,
+        verified: true,
+        code: 'PENDING_REVIEW',
+        reason: 'Protocol eligibility is pending and should not be treated as approved.',
+        checkedAt,
+      };
+    case 'unknown':
+      return {
+        address,
+        state: 'unknown',
+        eligible: false,
+        verified: true,
+        code: 'STATUS_UNKNOWN',
+        reason: 'Protocol returned a status that does not establish eligibility.',
+        checkedAt,
+      };
+    case 'unavailable':
+    case null:
+    case undefined:
+    default:
+      return {
+        address,
+        state: 'unavailable',
+        eligible: false,
+        verified: false,
+        code: 'STATUS_UNAVAILABLE',
+        reason: 'Compliance status is unavailable. Retry the read before enabling restricted actions.',
+        checkedAt,
+      };
+  }
+}
 
-constructor(client: AegisClient) {
+export class ComplianceModule {
+  private client: AegisClient;
+
+  constructor(client: AegisClient) {
     this.client = client;
   }
 
   /**
-   * Queries the contract to check if a user is KYC-approved (whitelisted).
+   * Queries the contract to check if a user is protocol-whitelisted.
    * @param address The Stellar public key to check.
    * @returns boolean indicating whitelist status.
    */
@@ -30,8 +116,42 @@ constructor(client: AegisClient) {
     // rpc.Api.isSimulationSuccess acts as a type guard here
     // Check for success AND ensure the result object actually exists
     if (rpc.Api.isSimulationSuccess(result) && result.result) {
-       return parseSorobanResult(result.result.retval as any) as boolean;
+      return parseSorobanResult(result.result.retval as any) as boolean;
     }
     return false;
+  }
+
+  /**
+   * Returns a dashboard-safe readiness result for restricted protocol actions.
+   *
+   * The deployed contract currently exposes `is_whitelisted`, so a successful
+   * live read resolves to `approved` or `blocked`. The public readiness model
+   * also represents `revoked`, `pending`, `unknown`, and `unavailable` so richer
+   * protocol/indexer sources can be normalised without changing consumer logic.
+   *
+   * This is protocol state, not proof of off-chain legal/KYC status. Contracts
+   * remain the final authority for whether any state-changing operation succeeds.
+   */
+  public async checkReadiness(address: string): Promise<ComplianceReadinessResult> {
+    const checkedAt = new Date().toISOString();
+
+    if (!StrKey.isValidEd25519PublicKey(address)) {
+      return {
+        address,
+        state: 'unknown',
+        eligible: false,
+        verified: false,
+        code: 'INVALID_ADDRESS',
+        reason: 'A valid Stellar public key is required for a compliance readiness check.',
+        checkedAt,
+      };
+    }
+
+    try {
+      const isWhitelisted = await this.checkWhitelist(address);
+      return mapComplianceReadiness(address, isWhitelisted, checkedAt);
+    } catch {
+      return mapComplianceReadiness(address, 'unavailable', checkedAt);
+    }
   }
 }
