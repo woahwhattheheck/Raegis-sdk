@@ -81,6 +81,14 @@ export class AssetModule {
     }
   }
 
+  private async requireTransferCompliance(
+    sender: string,
+    recipient: string,
+  ): Promise<void> {
+    await this.requireCompliant(sender, 'SENDER_NOT_COMPLIANT', 'sender');
+    await this.requireCompliant(recipient, 'RECIPIENT_NOT_COMPLIANT', 'recipient');
+  }
+
   /**
    * Builds a transfer intent only after validating inputs, configuration, and
    * both protocol whitelist checks. Sender is checked first so a rejected
@@ -95,8 +103,7 @@ export class AssetModule {
     this.validateTransferConfig();
 
     const sender = signer.publicKey();
-    await this.requireCompliant(sender, 'SENDER_NOT_COMPLIANT', 'sender');
-    await this.requireCompliant(to, 'RECIPIENT_NOT_COMPLIANT', 'recipient');
+    await this.requireTransferCompliance(sender, to);
 
     return Object.freeze({
       sender,
@@ -172,8 +179,12 @@ export class AssetModule {
     // Soroban invokes require simulation/preparation to include the live
     // footprint and authorization before the final signing operation.
     const preparedTx = await this.client.rpcServer.prepareTransaction(tx);
-    // RPC calls await external state. Re-check the original signer, contract
-    // and network after both awaits so a changed client cannot be signed.
+    // RPC calls await external state. Re-check protocol compliance after the
+    // final preparation await so a sender or recipient revoked during
+    // simulation cannot still be signed and submitted.
+    await this.requireTransferCompliance(intent.sender, intent.recipient);
+    // The compliance lookups above also await external state, so re-check the
+    // signer/contract/network binding once more immediately before signing.
     this.validateTransferIntentBinding(intent);
     preparedTx.sign(signer);
 
@@ -195,16 +206,7 @@ export class AssetModule {
   ): Promise<string> {
     this.validateTransferIntentBinding(intent);
 
-    await this.requireCompliant(
-      intent.sender,
-      'SENDER_NOT_COMPLIANT',
-      'sender',
-    );
-    await this.requireCompliant(
-      intent.recipient,
-      'RECIPIENT_NOT_COMPLIANT',
-      'recipient',
-    );
+    await this.requireTransferCompliance(intent.sender, intent.recipient);
 
     return this.sendTransferIntent(intent);
   }
