@@ -23,6 +23,7 @@ function makeHarness() {
     module: new ComplianceModule(client),
     rpcServer,
     signer,
+    client,
   };
 }
 
@@ -86,6 +87,54 @@ describe('ComplianceModule batch compliance operations', () => {
     await expect(module.batchWhitelist([user])).rejects.toThrow(
       'Batch compliance submission was not accepted: ERROR.',
     );
+  });
+
+  it('rejects malformed Stellar identities with a classified preflight error', async () => {
+    const { module, rpcServer } = makeHarness();
+    await expect(
+      module.batchWhitelist(['not-a-Stellar-address']),
+    ).rejects.toMatchObject({
+      name: 'ComplianceBatchError',
+      code: 'INVALID_ADDRESS',
+      index: 0,
+    });
+    expect(rpcServer.getAccount).not.toHaveBeenCalled();
+    expect(rpcServer.prepareTransaction).not.toHaveBeenCalled();
+    expect(rpcServer.sendTransaction).not.toHaveBeenCalled();
+  });
+
+  it('rejects RPC source account mismatch before transaction preparation', async () => {
+    const { module, rpcServer } = makeHarness();
+    const user = Keypair.random().publicKey();
+    rpcServer.getAccount.mockResolvedValue(
+      new Account(Keypair.random().publicKey(), '1'),
+    );
+
+    await expect(module.batchWhitelist([user])).rejects.toMatchObject({
+      name: 'ComplianceBatchError',
+      code: 'BATCH_CONTEXT_CHANGED',
+    });
+    expect(rpcServer.prepareTransaction).not.toHaveBeenCalled();
+    expect(rpcServer.sendTransaction).not.toHaveBeenCalled();
+  });
+
+  it('does not sign or send if signer network changes while RPC prepares', async () => {
+    const { module, rpcServer, signer, client } = makeHarness();
+    const user = Keypair.random().publicKey();
+    rpcServer.getAccount.mockResolvedValue(
+      new Account(signer.publicKey(), '1'),
+    );
+    rpcServer.prepareTransaction.mockImplementation(async (transaction) => {
+      client.networkPassphrase = Networks.PUBLIC;
+      return transaction;
+    });
+
+    await expect(module.batchWhitelist([user])).rejects.toMatchObject({
+      name: 'ComplianceBatchError',
+      code: 'BATCH_CONTEXT_CHANGED',
+    });
+    expect(rpcServer.prepareTransaction).toHaveBeenCalledTimes(1);
+    expect(rpcServer.sendTransaction).not.toHaveBeenCalled();
   });
 
   it('maps whitelist and revocation helpers to explicit lifecycle targets', async () => {
