@@ -50,12 +50,12 @@ export interface AegisSdkDiagnosticsReport {
   configuration: {
     environment: DiagnosticsEnvironment;
     rpc: {
-      configured: true;
+      configured: boolean;
       transport: DiagnosticsRpcTransport;
       usesPresetEndpoint: boolean;
     };
     network: {
-      configured: true;
+      configured: boolean;
       target: DiagnosticsEnvironment;
     };
     contract: {
@@ -111,14 +111,14 @@ export function buildSdkDiagnosticsReport(
     configuration: {
       environment: input.environment ?? 'custom',
       rpc: {
-        configured: true,
+        configured: input.rpcUrl.trim().length > 0,
         transport: identifyRpcTransport(input.rpcUrl),
         usesPresetEndpoint:
           input.environment !== undefined &&
           input.rpcUrl === AEGIS_ENVIRONMENTS[input.environment].rpcUrl,
       },
       network: {
-        configured: true,
+        configured: input.networkPassphrase.trim().length > 0,
         target: networkTarget,
       },
       contract: {
