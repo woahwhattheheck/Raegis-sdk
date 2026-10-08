@@ -42,14 +42,31 @@ function firstParsed<T>(
   return { present, value: null };
 }
 
+function firstParsedFrom<T>(
+  sources: readonly (Row | null)[],
+  keys: readonly string[],
+  parse: (value: unknown) => T | null,
+): ParsedAlias<T> {
+  let present = false;
+  for (const source of sources) {
+    const parsed = firstParsed(source, keys, parse);
+    present = present || parsed.present;
+    if (parsed.value !== null) {
+      return { present: true, value: parsed.value };
+    }
+  }
+
+  return { present, value: null };
+}
+
 function text(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
 }
 
-function stringFrom(primary: Row | null, nested: Row | null, keys: readonly string[]) {
-  return firstParsed(primary, keys, text).value ?? firstParsed(nested, keys, text).value;
+function stringFrom(sources: readonly (Row | null)[], keys: readonly string[]) {
+  return firstParsedFrom(sources, keys, text).value;
 }
 
 function integer(value: unknown): string | null {
@@ -86,17 +103,16 @@ function unsupported(source: Row | null): boolean {
 }
 
 function metadataFor(
-  source: Row | null,
-  nested: Row | null,
+  sources: readonly (Row | null)[],
   decimals: number | null,
   assetId: string | null,
 ): NormalizedPortfolioAssetMetadata {
   return {
-    symbol: stringFrom(source, nested, ['symbol', 'assetSymbol', 'asset_symbol']),
-    name: stringFrom(source, nested, ['name', 'assetName', 'asset_name']),
+    symbol: stringFrom(sources, ['symbol', 'assetSymbol', 'asset_symbol']),
+    name: stringFrom(sources, ['name', 'assetName', 'asset_name']),
     decimals,
-    category: stringFrom(source, nested, ['category', 'assetCategory', 'asset_category']),
-    contractId: stringFrom(source, nested, ['contractId', 'contract_id']),
+    category: stringFrom(sources, ['category', 'assetCategory', 'asset_category']),
+    contractId: stringFrom(sources, ['contractId', 'contract_id']),
   };
 }
 
@@ -133,8 +149,12 @@ export function normalizePortfolioHolding(
   options: PortfolioNormalizerOptions = {},
 ): NormalizedPortfolioHolding {
   const source = row(input);
-  const nested = firstParsed(source, ['metadata', 'asset'], row).value;
-  const assetId = stringFrom(source, nested, [
+  const nested = [
+    source ? row(source.metadata) : null,
+    source ? row(source.asset) : null,
+  ] as const;
+  const sources = [source, ...nested] as const;
+  const assetId = stringFrom(sources, [
     'assetId',
     'asset_id',
     'contractId',
@@ -143,9 +163,8 @@ export function normalizePortfolioHolding(
   ]);
 
   const decimalKeys = ['decimals', 'assetDecimals', 'asset_decimals'] as const;
-  const sourceDecimals = firstParsed(source, decimalKeys, precision);
-  const nestedDecimals = firstParsed(nested, decimalKeys, precision);
-  const precisionAliasExists = [source, nested].some(
+  const parsedDecimals = firstParsedFrom(sources, decimalKeys, precision);
+  const precisionAliasExists = sources.some(
     (candidate) =>
       candidate !== null &&
       decimalKeys.some((key) => Object.prototype.hasOwnProperty.call(candidate, key)),
@@ -155,21 +174,19 @@ export function normalizePortfolioHolding(
     throw new RangeError(`defaultDecimals must be between 0 and ${MAX_DECIMALS}.`);
   }
   const decimals =
-    sourceDecimals.value ??
-    nestedDecimals.value ??
-    (precisionAliasExists ? null : defaultDecimals);
+    parsedDecimals.value ?? (precisionAliasExists ? null : defaultDecimals);
 
   const balance = firstParsed(
     source,
     ['balance', 'rawBalance', 'raw_balance', 'amount', 'quantity'],
     integer,
   ).value;
-  const metadata = metadataFor(source, nested, decimals, assetId);
+  const metadata = metadataFor(sources, decimals, assetId);
 
   let status: NormalizedPortfolioHolding['status'] = 'supported';
   let code: NormalizedPortfolioHolding['code'];
 
-  if (unsupported(source) || unsupported(nested)) {
+  if (sources.some((candidate) => unsupported(candidate))) {
     status = 'unsupported';
     code = 'UNSUPPORTED_ASSET';
   } else if (assetId === null) {

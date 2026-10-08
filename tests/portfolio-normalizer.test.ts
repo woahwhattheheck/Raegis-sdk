@@ -82,6 +82,33 @@ describe('portfolio normalizer', () => {
       },
     });
   });
+
+  it('falls through partial metadata to later asset aliases while preserving earlier values', () => {
+    const holding = normalizePortfolioHolding({
+      assetId: 'C_DUAL',
+      balance: '250',
+      metadata: { name: 'Primary Name' },
+      asset: {
+        name: 'Fallback Name',
+        symbol: 'DUAL',
+        decimals: 2,
+        unsupported: true,
+      },
+    });
+
+    expect(holding).toMatchObject({
+      status: 'unsupported',
+      code: 'UNSUPPORTED_ASSET',
+      assetId: 'C_DUAL',
+      decimalBalance: '2.5',
+      metadata: {
+        name: 'Primary Name',
+        symbol: 'DUAL',
+        decimals: 2,
+      },
+    });
+  });
+
   it.each([null, undefined])(
     'fails closed when a precision alias is explicitly %s',
     (decimals) => {
