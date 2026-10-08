@@ -29,6 +29,8 @@ const reader = createReadOnlyClient({
   contractId: 'C_YOUR_CONTRACT_ID',
 });
 const isApproved = await reader.compliance.checkWhitelist('G_USER_PUBLIC_KEY');
+// Typed, fail-closed status: approved, blocked, revoked, pending, unknown, unavailable.
+const readiness = await reader.compliance.checkReadiness('G_USER_PUBLIC_KEY');
 const portfolio  = await reader.investor.getPortfolio('G_USER_PUBLIC_KEY');
 
 // Investor — keypair required. Transfer capability only.
@@ -72,6 +74,17 @@ const aegis = new AegisClient({
   keypair: Keypair.fromSecret('S...'), // optional for read-only
 });
 ```
+
+## Compliance Readiness
+
+Use `client.compliance.checkReadiness(address)` for a typed, conservative protocol
+whitelist status. A false whitelist is **unknown**, not automatically blocked or
+revoked; optional authenticated external evidence may explain a negative result.
+Failed simulations and RPC errors are **unavailable**. Admin/issuer rights cannot
+be inferred from the current contract whitelist. This is a dashboard hint, not
+legal KYC clearance or a substitute for contract authorization.
+
+See [Compliance Readiness & Dashboard Integration](./docs/compliance-readiness.md).
 
 ## Role Discovery & Capability Checks
 Check what an address is classified as, and what it can currently attempt through the SDK.

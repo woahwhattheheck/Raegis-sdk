@@ -17,6 +17,15 @@ export type {
 export * from './types/client-factory';
 export * from './errors/client-factory';
 export { ComplianceModule } from './compliance';
+export type {
+  ComplianceReadinessState,
+  ComplianceReadinessCode,
+  ComplianceReadinessOperation,
+  ComplianceReadinessOptions,
+  ComplianceReadinessResult,
+  ComplianceEvidenceState,
+  ComplianceEvidenceLookup,
+} from './types/compliance';
 export { AssetModule } from './asset';
 export { InvestorModule } from './investor/portfolio';
 export { RoleModule } from './role';
