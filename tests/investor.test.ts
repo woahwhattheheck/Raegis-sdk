@@ -154,3 +154,54 @@ describe('InvestorModule (Portfolio Read Model)', () => {
     });
   });
 });
+
+
+describe('InvestorModule pagination', () => {
+  const client = new AegisClient({
+    rpcUrl: 'https://soroban-testnet.stellar.org',
+    networkPassphrase: Networks.TESTNET,
+    contractId: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSC4',
+  });
+
+  const holdings = ['asset-a', 'asset-b', 'asset-c'].map((assetId) => ({
+    assetId,
+    balance: '1',
+    formattedBalance: '0.00',
+    metadata: {
+      symbol: assetId,
+      name: assetId,
+      decimals: 7,
+      isRwa: true,
+      contractId: assetId,
+    },
+    isCompliant: true,
+    transferEligibility: { isEligible: true },
+  }));
+
+  it('returns stable SDK cursors and a complete final page', () => {
+    const first = client.investor.paginateHoldings(holdings, { limit: 2 });
+
+    expect(first.items.map((holding) => holding.assetId)).toEqual([
+      'asset-a',
+      'asset-b',
+    ]);
+    expect(first.pagination.continuation).toEqual({
+      state: 'has_more',
+      cursor: 'offset:2',
+    });
+
+    const second = client.investor.paginateHoldings(holdings, {
+      limit: 2,
+      cursor: 'offset:2',
+    });
+
+    expect(second.items.map((holding) => holding.assetId)).toEqual(['asset-c']);
+    expect(second.pagination.continuation).toEqual({ state: 'complete' });
+  });
+
+  it('rejects a provider cursor in the SDK-owned holdings pager', () => {
+    expect(() =>
+      client.investor.paginateHoldings(holdings, { cursor: 'rpc-token' })
+    ).toThrow(expect.objectContaining({ code: 'INVALID_CURSOR' }));
+  });
+});
