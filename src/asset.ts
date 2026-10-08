@@ -152,7 +152,15 @@ export class AssetModule {
       nativeToScVal(intent.amount, { type: 'i128' }),
     );
 
-    const sourceAccount = new Account(signer.publicKey(), '0');
+    // A hardcoded sequence ('0') is not a sendable live Stellar transaction.
+    // Resolve the current funded account before building the Soroban call.
+    const sourceAccount = await this.client.rpcServer.getAccount(signer.publicKey());
+    if (sourceAccount.accountId() !== signer.publicKey()) {
+      throw this.transferError(
+        'INTENT_CONFIG_MISMATCH',
+        'The resolved source account does not match the checked transfer signer.',
+      );
+    }
     const tx = new TransactionBuilder(sourceAccount, {
       fee: '1000',
       networkPassphrase: this.client.networkPassphrase,
@@ -161,10 +169,16 @@ export class AssetModule {
       .setTimeout(30)
       .build();
 
-    tx.sign(signer);
+    // Soroban invokes require simulation/preparation to include the live
+    // footprint and authorization before the final signing operation.
+    const preparedTx = await this.client.rpcServer.prepareTransaction(tx);
+    // RPC calls await external state. Re-check the original signer, contract
+    // and network after both awaits so a changed client cannot be signed.
+    this.validateTransferIntentBinding(intent);
+    preparedTx.sign(signer);
 
     try {
-      const response = await this.client.rpcServer.sendTransaction(tx);
+      const response = await this.client.rpcServer.sendTransaction(preparedTx);
       return response.hash;
     } catch (error) {
       throw new Error(`Transfer transaction failed: ${error}`);
