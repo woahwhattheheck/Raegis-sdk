@@ -39,4 +39,24 @@ describe('receipt runtime type boundaries', () => {
       ...mint, observedAt: null as unknown as string,
     })).toThrow(expect.objectContaining({ code: 'INVALID_TIMESTAMP' }));
   });
+
+  it('rejects malformed target records and compliance flags with stable errors', () => {
+    for (const target of [null, [], 7, true]) {
+      expect(() => buildTransactionReceipt({
+        ...mint, target: target as unknown as typeof mint.target,
+      })).toThrow(expect.objectContaining({ code: 'INVALID_TARGET' }));
+    }
+    expect(() => buildTransactionReceipt(
+      null as unknown as Parameters<typeof buildTransactionReceipt>[0],
+    )).toThrow(expect.objectContaining({ code: 'INVALID_TARGET' }));
+    expect(() => buildTransactionReceipt({
+      ...mint, target: { ...mint.target, assetId: 42 as unknown as string },
+    })).toThrow(expect.objectContaining({ code: 'INVALID_TARGET' }));
+    expect(() => buildTransactionReceipt({
+      operation: 'compliance-update',
+      target: { address: 'GINVESTOR', compliant: 'yes' as unknown as boolean },
+      status: 'PENDING',
+      networkPassphrase: Networks.TESTNET,
+    })).toThrow(expect.objectContaining({ code: 'INVALID_TARGET' }));
+  });
 });
