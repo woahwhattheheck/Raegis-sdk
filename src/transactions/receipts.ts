@@ -57,8 +57,7 @@ export function buildTransactionReceipt<TInput extends TransactionReceiptInput>(
 ): TransactionReceipt<TInput> {
   // Validate one immutable set of own target fields rather than re-reading a
   // caller-owned object after validation (getters can change amounts).
-  const operation = input?.operation;
-  const target = snapshotReceiptTarget(input);
+  const { operation, target } = snapshotReceiptTarget(input);
   validateReceiptTarget({ operation, target } as TransactionReceiptInput);
 
   const status = normalizeTransactionReceiptStatus(input.status);
@@ -113,7 +112,10 @@ const TARGET_FIELDS: Readonly<Record<TransactionReceiptInput['operation'], reado
  * The returned snapshot is used for BOTH validation and display, preventing
  * a malicious or mutable RPC object from changing receipt data mid-build.
  */
-function snapshotReceiptTarget(input: TransactionReceiptInput): TransactionReceiptInput['target'] {
+function snapshotReceiptTarget(input: TransactionReceiptInput): {
+  operation: TransactionReceiptInput['operation'];
+  target: TransactionReceiptInput['target'];
+} {
   if (!input || typeof input !== 'object') {
     throw new TransactionReceiptError('INVALID_TARGET', 'Transaction receipt input must be an object.');
   }
@@ -138,7 +140,10 @@ function snapshotReceiptTarget(input: TransactionReceiptInput): TransactionRecei
       }
       values[field] = descriptor.value;
     }
-    return values as TransactionReceiptInput['target'];
+    return {
+      operation: operation.value as TransactionReceiptInput['operation'],
+      target: values as unknown as TransactionReceiptInput['target'],
+    };
   } catch (error) {
     if (error instanceof TransactionReceiptError) throw error;
     throw new TransactionReceiptError('INVALID_TARGET', 'Transaction receipt target cannot be safely inspected.');
