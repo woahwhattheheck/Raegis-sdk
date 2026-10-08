@@ -70,6 +70,35 @@ try {
 
 > **Open note:** `checkWhitelist` passes the raw invocation object returned by `contract.call(...)` directly as the `transaction` field to `simulateTransaction` (cast through `as any`), rather than assembling a full `Transaction` via `TransactionBuilder` the way `AssetModule.mint`/`transfer` do. The source itself flags this with a comment ("Cast required depending on SDK version wrapper"), so the exact request shape expected by `simulateTransaction` across `@stellar/stellar-sdk` versions is not fully confirmed — verify against the installed SDK version rather than assuming it's stable.
 
+### `checkReadiness(address: string): Promise<ComplianceReadinessResult>`
+
+**Parameters**
+* `address` (string): A Stellar Ed25519 public key (`G...`).
+
+**Returns**
+A typed result containing `state`, `eligible`, `verified`, `code`, `reason`,
+`address`, and `checkedAt`. Successful boolean reads map to `approved` or
+`blocked`; unexpected return values map to verified `unknown`. Unsuccessful,
+result-less, restoration-required, or throwing reads return `unavailable` with
+`verified: false`. Invalid addresses return unverified `unknown` with
+`INVALID_ADDRESS` without calling RPC. Only `approved` has `eligible: true`.
+
+**Errors**
+RPC and decode failures are represented by `unavailable`; raw error details do
+not appear in the result. This method does not inherit the ambiguous `false`
+fallback from `checkWhitelist`.
+
+**Example**
+```typescript
+const readiness = await client.compliance.checkReadiness('G_USER_PUBLIC_KEY');
+if (readiness.state === 'unavailable') {
+  // Offer a read retry; do not infer rejection or resubmit a transaction.
+}
+```
+
+See [Compliance Readiness](./compliance-readiness.md) for state semantics,
+reason codes, dashboard integration, and protocol-only limitations.
+
 ---
 
 ## `AssetModule`
@@ -199,3 +228,4 @@ Soroban transactions and RPC queries can fail for several reasons. The SDK manag
 4. **Safe Read Model Fallbacks:** Portfolio queries intercept network/RPC failures and return an `InvestorPortfolio` with `status: 'unavailable'` to prevent frontend application crashes.
 
 > **Open note:** as described above under [Exported Types & Errors](#exported-types--errors-srcindexts), point 4 (safe fallbacks) matches what `InvestorModule.getPortfolio` does today, but `PortfolioError` itself is not currently thrown by `checkWhitelist`, `mint`, or `transfer` — those surface plain `Error` objects instead. Treat this section as the intended error-handling strategy for the SDK rather than a description of every method's current exact error type.
+

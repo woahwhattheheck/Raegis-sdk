@@ -1,4 +1,4 @@
-import { Contract, nativeToScVal, rpc, StrKey } from '@stellar/stellar-sdk';
+import { Contract, nativeToScVal, rpc, scValToNative, StrKey } from '@stellar/stellar-sdk';
 import { AegisClient } from './client';
 import {
   ComplianceProtocolStatus,
@@ -100,18 +100,23 @@ export class ComplianceModule {
    * @param address The Stellar public key to check.
    * @returns boolean indicating whitelist status.
    */
-  public async checkWhitelist(address: string): Promise<boolean> {
+  private async simulateWhitelist(address: string): Promise<rpc.Api.SimulateTransactionResponse> {
     const contract = new Contract(this.client.contractId);
 
     // Create the invocation for the read-only 'is_whitelisted' function
     const call = contract.call('is_whitelisted', nativeToScVal(address, { type: 'address' }));
 
-    const result = await this.client.runNetworkOperation(() =>
+    return this.client.runNetworkOperation(() =>
       this.client.rpcServer.simulateTransaction({
         // Dummy transaction for simulation purposes
         transaction: call as any, // Cast required depending on SDK version wrapper
       } as any)
     );
+
+  }
+
+  public async checkWhitelist(address: string): Promise<boolean> {
+    const result = await this.simulateWhitelist(address);
 
     // rpc.Api.isSimulationSuccess acts as a type guard here
     // Check for success AND ensure the result object actually exists
@@ -148,10 +153,21 @@ export class ComplianceModule {
     }
 
     try {
-      const isWhitelisted = await this.checkWhitelist(address);
-      return mapComplianceReadiness(address, isWhitelisted, checkedAt);
+      const result = await this.simulateWhitelist(address);
+      if (!rpc.Api.isSimulationSuccess(result) || !result.result || rpc.Api.isSimulationRestore(result)) {
+        return mapComplianceReadiness(address, 'unavailable', checkedAt);
+      }
+
+      // RPC success responses already contain a parsed ScVal, not a base64 string.
+      const status = scValToNative(result.result.retval);
+      return mapComplianceReadiness(
+        address,
+        typeof status === 'boolean' ? status : 'unknown',
+        checkedAt
+      );
     } catch {
       return mapComplianceReadiness(address, 'unavailable', checkedAt);
     }
   }
 }
+
