@@ -40,7 +40,7 @@ export {
   NetworkFailureDiagnostic,
   NetworkRecoveryAction,
 } from './diagnostics/network';
-export { resolveClientConfig } from './config/validate';
+export { resolveClientConfig, normalizePaginationInput, inferPaginationContinuation, paginateArray, PaginationValidationError, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from './config/validate';
 export { AEGIS_ENVIRONMENTS, getEnvironmentPreset } from './config/environments';
 export * from './types/portfolio';
 export * from './errors/portfolio';
@@ -52,4 +52,4 @@ export * from './errors/config';
 export * from './types/contract-event';
 export * from './errors/event';
 export type { AegisEnvironmentName, AegisEnvironmentPreset } from './config/environments';
-export type { ResolvedAegisConfig } from './config/validate';
+export type { ResolvedAegisConfig, PaginationInput, NormalizedPaginationInput, PaginationContinuation, PaginationMetadata, PaginatedResult, PaginationValidationErrorCode } from './config/validate';
