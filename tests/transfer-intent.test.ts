@@ -4,6 +4,7 @@ import { AegisClient } from '../src/client';
 import { CompliantTransferIntentError } from '../src/errors/transfer-intent';
 
 const contractId = StrKey.encodeContract(Buffer.alloc(32, 7));
+const ACCEPTED_HASH = 'a'.repeat(64);
 
 function makeClient() {
   return new AegisClient({
@@ -162,9 +163,9 @@ describe('compliant transfer intents', () => {
       .mockImplementation(async (tx) => tx as any);
     const send = jest
       .spyOn(client.rpcServer, 'sendTransaction')
-      .mockResolvedValue({ hash: 'tx-hash' } as any);
+      .mockResolvedValue({ hash: ACCEPTED_HASH, status: 'PENDING' } as any);
 
-    await expect(client.asset.transfer(recipient, 42)).resolves.toBe('tx-hash');
+    await expect(client.asset.transfer(recipient, 42)).resolves.toBe(ACCEPTED_HASH);
 
     expect(check).toHaveBeenCalledTimes(4);
     expect(check).toHaveBeenNthCalledWith(1, client.keypair!.publicKey());
@@ -176,6 +177,43 @@ describe('compliant transfer intents', () => {
     expect(prepare).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenCalledWith(await prepare.mock.results[0].value);
+  });
+
+  it('distinguishes rejected and uncertain Soroban submission from an accepted hash', async () => {
+    const client = makeClient();
+    const sender = client.keypair!.publicKey();
+    const recipient = Keypair.random().publicKey();
+    jest.spyOn(client.compliance, 'checkWhitelist').mockResolvedValue(true);
+    jest.spyOn(client.rpcServer, 'getAccount').mockResolvedValue(
+      new Account(sender, '123'),
+    );
+    jest.spyOn(client.rpcServer, 'prepareTransaction')
+      .mockImplementation(async (tx) => tx as any);
+    const send = jest.spyOn(client.rpcServer, 'sendTransaction');
+    const run = () => client.asset.transfer(recipient, 25);
+
+    send.mockResolvedValueOnce({ status: 'ERROR', hash: ACCEPTED_HASH } as any);
+    await expectIntentError(run(), 'SUBMISSION_REJECTED');
+
+    send.mockResolvedValueOnce({ status: 'TRY_AGAIN_LATER', hash: ACCEPTED_HASH } as any);
+    await expectIntentError(run(), 'SUBMISSION_UNCONFIRMED');
+
+    send.mockResolvedValueOnce({ status: 'PENDING', hash: 'not-a-hash' } as any);
+    await expectIntentError(run(), 'SUBMISSION_UNCONFIRMED');
+
+    send.mockRejectedValueOnce(new Error('private RPC response details'));
+    try {
+      await run();
+      throw new Error('Expected submission error');
+    } catch (error) {
+      expect(error).toBeInstanceOf(CompliantTransferIntentError);
+      expect((error as CompliantTransferIntentError).code).toBe('SUBMISSION_UNCONFIRMED');
+      expect(String(error)).not.toContain('private RPC response');
+    }
+
+    send.mockResolvedValueOnce({ status: 'PENDING', hash: ACCEPTED_HASH } as any);
+    await expect(run()).resolves.toBe(ACCEPTED_HASH);
+    expect(send).toHaveBeenCalledTimes(5);
   });
 
   it('rechecks compliance after transaction preparation before signing or sending', async () => {
