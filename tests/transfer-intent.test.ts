@@ -166,14 +166,49 @@ describe('compliant transfer intents', () => {
 
     await expect(client.asset.transfer(recipient, 42)).resolves.toBe('tx-hash');
 
-    expect(check).toHaveBeenCalledTimes(2);
+    expect(check).toHaveBeenCalledTimes(4);
     expect(check).toHaveBeenNthCalledWith(1, client.keypair!.publicKey());
     expect(check).toHaveBeenNthCalledWith(2, recipient);
+    expect(check).toHaveBeenNthCalledWith(3, client.keypair!.publicKey());
+    expect(check).toHaveBeenNthCalledWith(4, recipient);
     expect(getAccount).toHaveBeenCalledTimes(1);
     expect(getAccount).toHaveBeenCalledWith(client.keypair!.publicKey());
     expect(prepare).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenCalledWith(await prepare.mock.results[0].value);
+  });
+
+  it('rechecks compliance after transaction preparation before signing or sending', async () => {
+    const client = makeClient();
+    const sender = client.keypair!.publicKey();
+    const recipient = Keypair.random().publicKey();
+    let prepared = false;
+    const check = jest
+      .spyOn(client.compliance, 'checkWhitelist')
+      .mockImplementation(async (address) => !prepared || address === sender);
+    jest.spyOn(client.rpcServer, 'getAccount').mockResolvedValue(
+      new Account(sender, '123'),
+    );
+    const prepare = jest
+      .spyOn(client.rpcServer, 'prepareTransaction')
+      .mockImplementation(async (tx) => {
+        prepared = true;
+        return tx as any;
+      });
+    const send = jest.spyOn(client.rpcServer, 'sendTransaction');
+
+    await expectIntentError(
+      client.asset.transfer(recipient, 25),
+      'RECIPIENT_NOT_COMPLIANT',
+    );
+
+    expect(check).toHaveBeenCalledTimes(4);
+    expect(check).toHaveBeenNthCalledWith(1, sender);
+    expect(check).toHaveBeenNthCalledWith(2, recipient);
+    expect(check).toHaveBeenNthCalledWith(3, sender);
+    expect(check).toHaveBeenNthCalledWith(4, recipient);
+    expect(prepare).toHaveBeenCalledTimes(1);
+    expect(send).not.toHaveBeenCalled();
   });
 
   it('never prepares or submits a transaction for the wrong network account', async () => {
