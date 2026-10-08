@@ -85,6 +85,30 @@ const capability = await aegis.role.checkCapability('G_USER_PUBLIC_KEY', 'receiv
 console.log('Can receive transfer?', capability.isPermitted);
 ```
 
+## Typed Pagination
+
+Read-heavy SDK surfaces share a validated cursor/limit contract. Page limits default to 50 and are capped at 200; blank cursors and invalid limits fail before a provider request.
+
+```typescript
+const page = await aegis.events.fetchAndDecode(
+  { filters: [{ type: 'contract', contractIds: [contractId] }] },
+  { cursor: previousCursor, limit: 50 }
+);
+
+switch (page.pagination.continuation.state) {
+  case 'complete':
+    break;
+  case 'has_more':
+  case 'unknown':
+    // Use the returned cursor for an explicit follow-up read.
+    break;
+}
+```
+
+Provider cursors are opaque. A full Soroban event page with a paging token is reported as `unknown` continuation rather than falsely promising that another record exists; a short page is `complete`.
+
+For SDK-owned holdings arrays, `aegis.investor.paginateHoldings()` returns deterministic `offset:<n>` cursors and can report `has_more` or `complete` exactly. Those offset cursors are local to that helper and must not be reused as RPC cursors.
+
 ## Contract Event Decoder
 Decode Soroban contract events into typed audit-trail models for dashboards and indexers.
 
