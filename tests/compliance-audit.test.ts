@@ -181,6 +181,72 @@ describe('compliance audit reports', () => {
     );
   });
 
+  it('rejects malformed runtime report input and strips undeclared evidence fields', () => {
+    const malformedInputs = [
+      {
+        subject: 42 as never,
+        evidence: [],
+        checks: [{ code: 'KYC', summary: 'Pending', status: 'unknown' as const }],
+      },
+      {
+        subject: 'portfolio-42',
+        evidence: null as never,
+        checks: [{ code: 'KYC', summary: 'Pending', status: 'unknown' as const }],
+      },
+      {
+        subject: 'portfolio-42',
+        evidence: [],
+        checks: [{ code: 'KYC', summary: { private: 'value' } as never, status: 'unknown' as const }],
+      },
+      {
+        subject: 'portfolio-42',
+        evidence: [],
+        checks: [{
+          code: 'KYC',
+          summary: 'Pending',
+          status: 'unknown' as const,
+          evidenceIds: 'kyc-state' as never,
+        }],
+      },
+    ];
+
+    for (const input of malformedInputs) {
+      expect(() => buildComplianceAuditReport(input as never)).toThrow(
+        expect.objectContaining<Partial<ComplianceAuditInputError>>({
+          code: 'INVALID_REPORT_INPUT',
+        }),
+      );
+    }
+
+    const report = buildComplianceAuditReport({
+      subject: 'portfolio-42',
+      evidence: [
+        {
+          id: 'kyc-state',
+          source: 'protocol',
+          description: 'Protocol state',
+          privateNote: 'must not be published',
+        } as never,
+      ],
+      checks: [
+        {
+          code: 'KYC',
+          summary: 'Protocol state is unresolved',
+          status: 'unknown',
+          evidenceIds: ['kyc-state'],
+        },
+      ],
+    });
+
+    expect(report.evidence[0]).toEqual({
+      id: 'kyc-state',
+      source: 'protocol',
+      description: 'Protocol state',
+      reference: undefined,
+    });
+    expect(report.evidence[0]).not.toHaveProperty('privateNote');
+  });
+
   it('exposes the same pure builder through ComplianceModule', () => {
     const module = new ComplianceModule({} as AegisClient);
     const report = module.buildAuditReport({
