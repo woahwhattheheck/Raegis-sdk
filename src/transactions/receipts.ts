@@ -55,7 +55,11 @@ export function buildTransactionExplorerUrl(
 export function buildTransactionReceipt<TInput extends TransactionReceiptInput>(
   input: TInput,
 ): TransactionReceipt<TInput> {
-  validateReceiptTarget(input);
+  // Validate one immutable set of own target fields rather than re-reading a
+  // caller-owned object after validation (getters can change amounts).
+  const operation = input?.operation;
+  const target = snapshotReceiptTarget(input);
+  validateReceiptTarget({ operation, target } as TransactionReceiptInput);
 
   const status = normalizeTransactionReceiptStatus(input.status);
   const transactionHash =
@@ -80,8 +84,8 @@ export function buildTransactionReceipt<TInput extends TransactionReceiptInput>(
   );
 
   const receipt: TransactionReceipt<TInput> = {
-    operation: input.operation,
-    target: Object.freeze({ ...input.target }) as TInput['target'],
+    operation,
+    target: Object.freeze(target) as TInput['target'],
     status,
     transactionHash,
     explorerUrl: buildTransactionExplorerUrl(
@@ -90,11 +94,55 @@ export function buildTransactionReceipt<TInput extends TransactionReceiptInput>(
       input.explorerBaseUrl,
     ),
     observedAt,
-    summary: `${OPERATION_LABELS[input.operation]} ${STATUS_LABELS[status]}.`,
+    summary: `${OPERATION_LABELS[operation]} ${STATUS_LABELS[status]}.`,
     ...(failureCode ? { failureCode } : {}),
   };
 
   return Object.freeze(receipt);
+}
+
+const TARGET_FIELDS: Readonly<Record<TransactionReceiptInput['operation'], readonly string[]>> = {
+  'compliance-update': ['address', 'compliant'],
+  'asset-mint': ['assetId', 'recipient', 'amount'],
+  'asset-transfer': ['assetId', 'from', 'to', 'amount'],
+  'investor-update': ['investor'],
+};
+
+/**
+ * Reject accessor/inherited/unreadable target fields before validation.
+ * The returned snapshot is used for BOTH validation and display, preventing
+ * a malicious or mutable RPC object from changing receipt data mid-build.
+ */
+function snapshotReceiptTarget(input: TransactionReceiptInput): TransactionReceiptInput['target'] {
+  if (!input || typeof input !== 'object') {
+    throw new TransactionReceiptError('INVALID_TARGET', 'Transaction receipt input must be an object.');
+  }
+  try {
+    const operation = Object.getOwnPropertyDescriptor(input, 'operation');
+    const targetDescriptor = Object.getOwnPropertyDescriptor(input, 'target');
+    if (!operation || !('value' in operation) ||
+        !targetDescriptor || !('value' in targetDescriptor)) {
+      throw new TransactionReceiptError('INVALID_TARGET', 'Receipt operation and target must be own data properties.');
+    }
+    const target = targetDescriptor.value;
+    const fields = TARGET_FIELDS[operation.value as TransactionReceiptInput['operation']];
+    if (!fields || !target || typeof target !== 'object' || Array.isArray(target)) {
+      throw new TransactionReceiptError('INVALID_TARGET', 'Transaction receipt target must be an object.');
+    }
+
+    const values: Record<string, unknown> = {};
+    for (const field of fields) {
+      const descriptor = Object.getOwnPropertyDescriptor(target, field);
+      if (!descriptor || !('value' in descriptor)) {
+        throw new TransactionReceiptError('INVALID_TARGET', 'Receipt fields must be own data properties.');
+      }
+      values[field] = descriptor.value;
+    }
+    return values as TransactionReceiptInput['target'];
+  } catch (error) {
+    if (error instanceof TransactionReceiptError) throw error;
+    throw new TransactionReceiptError('INVALID_TARGET', 'Transaction receipt target cannot be safely inspected.');
+  }
 }
 
 function requireValue(value: string, field: string): void {
