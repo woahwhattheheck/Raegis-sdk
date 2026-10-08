@@ -8,9 +8,11 @@ import {
 import {
   inferPaginationContinuation,
   normalizePaginationInput,
+} from '../config/validate';
+import type {
   PaginationInput,
   PaginationMetadata,
-} from '../config/validate';
+} from '../types/pagination';
 import { decodeContractEvent, decodeContractEvents } from './decoder';
 
 export type FetchContractEventsRequest = Parameters<rpc.Server['getEvents']>[0];
