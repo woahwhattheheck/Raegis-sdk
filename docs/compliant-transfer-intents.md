@@ -34,5 +34,24 @@ Preflight failures use `CompliantTransferIntentError.code`:
 `RECIPIENT_NOT_COMPLIANT`, `COMPLIANCE_CHECK_FAILED`, and
 `INTENT_CONFIG_MISMATCH`.
 
+## Submission outcome and safe retry
+
+The SDK returns a 64-character transaction hash only when Soroban RPC
+identifies the submission as `PENDING` or `DUPLICATE`. A returned hash is
+**not** final ledger success; callers must still poll that hash for a confirmed
+result.
+
+A definitive RPC `ERROR` response yields `CompliantTransferIntentError`
+with code `SUBMISSION_REJECTED`. A `TRY_AGAIN_LATER` response, missing or
+malformed hash/status, or network transport exception yields
+`SUBMISSION_UNCONFIRMED` instead: the transaction may have reached the RPC
+endpoint, so do **not** blindly resubmit a payment. Inspect transaction status
+and reconcile the original signed transaction before considering another send.
+
+RPC exception text is deliberately excluded from the public error. It may
+include private provider details. These failure paths do not alter the prior
+whitelist rechecks, signer and source account binding, or simulation preparation
+requirements.
+
 These checks describe SDK and protocol readiness. The contract remains
 authoritative when the transaction is submitted.
