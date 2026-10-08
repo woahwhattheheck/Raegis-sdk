@@ -98,15 +98,30 @@ export function buildTransactionReceipt<TInput extends TransactionReceiptInput>(
 }
 
 function requireValue(value: string, field: string): void {
-  if (!value || !value.trim()) {
-    throw new TransactionReceiptError('INVALID_TARGET', `${field} is required.`);
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new TransactionReceiptError('INVALID_TARGET', `${field} must be a non-empty string.`);
   }
 }
 
 function validateReceiptTarget(input: TransactionReceiptInput): void {
+  // Inputs can cross RPC, storage, or JSON boundaries without their static
+  // TypeScript shape. Reject malformed records before reading nested fields,
+  // rather than leaking a TypeError to a dashboard confirmation screen.
+  if (
+    input === null ||
+    typeof input !== 'object' ||
+    !input.target ||
+    typeof input.target !== 'object' ||
+    Array.isArray(input.target)
+  ) {
+    throw new TransactionReceiptError('INVALID_TARGET', 'Transaction receipt target must be an object.');
+  }
   switch (input.operation) {
     case 'compliance-update':
       requireValue(input.target.address, 'Compliance address');
+      if (typeof input.target.compliant !== 'boolean') {
+        throw new TransactionReceiptError('INVALID_TARGET', 'Compliance state must be a boolean.');
+      }
       return;
     case 'asset-mint':
       requireValue(input.target.assetId, 'Asset identifier');
